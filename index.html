@@ -254,7 +254,7 @@ select option{background:var(--surface);}
     </div>
     <div id="inputError"></div>
     <div class="actions">
-      <button class="btn btn-primary" onclick="startAnalysis()">> Run Full Analysis</button>
+      <button class="btn btn-primary" onclick="startAnalysis()">Run Full Analysis</button>
     </div>
   </div>
 
@@ -281,10 +281,10 @@ select option{background:var(--surface);}
     <div class="report-body" id="reportBody"></div>
     <div class="actions">
       <button class="btn btn-primary" onclick="goToProposal()">-> Generate Proposal</button>
-      <button class="btn btn-primary" onclick="saveAudit()">ðŸ’¾ Save Audit</button>
-      <button class="btn btn-accent2" onclick="downloadPDF()">â†“ PDF</button>
-      <button class="btn btn-ghost" onclick="copyReport()">âŽ˜ Copy</button>
-      <button class="btn btn-ghost" onclick="resetTool()"><- New</button>
+      <button class="btn btn-primary" onclick="saveAudit()">Save Audit</button>
+      <button class="btn btn-accent2" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn btn-ghost" onclick="copyReport()">Copy Copy</button>
+      <button class="btn btn-ghost" onclick="resetTool()">New</button>
     </div>
     <div id="saveMsg"></div>
   </div>
@@ -293,11 +293,11 @@ select option{background:var(--surface);}
   <div class="panel" id="panel4">
     <div id="proposalContent"></div>
     <div class="actions">
-      <button class="btn btn-primary" onclick="saveAudit()">ðŸ’¾ Save Audit + Proposal</button>
-      <button class="btn btn-accent2" onclick="downloadProposalPDF()">â†“ Proposal PDF</button>
-      <button class="btn btn-ghost" onclick="copyProposal()">âŽ˜ Copy Proposal</button>
-      <button class="btn btn-ghost" onclick="setStep(3)"><- Back to Report</button>
-      <button class="btn btn-ghost" onclick="resetTool()"><- New Audit</button>
+      <button class="btn btn-primary" onclick="saveAudit()">Save Audit + Proposal</button>
+      <button class="btn btn-accent2" onclick="downloadProposalPDF()">Download Proposal PDF</button>
+      <button class="btn btn-ghost" onclick="copyProposal()">Copy Copy Proposal</button>
+      <button class="btn btn-ghost" onclick="setStep(3)">Back to Report</button>
+      <button class="btn btn-ghost" onclick="resetTool()">New Audit</button>
     </div>
     <div id="proposalSaveMsg"></div>
 
@@ -351,8 +351,8 @@ select option{background:var(--surface);}
   </div>
   <div id="proposalViewContent"></div>
   <div class="actions" style="margin-top:16px;">
-    <button class="btn btn-accent2 btn-sm" onclick="downloadProposalPDFFromLib()">â†“ Download PDF</button>
-    <button class="btn btn-ghost btn-sm" onclick="copyProposalFromLib()">âŽ˜ Copy</button>
+    <button class="btn btn-accent2 btn-sm" onclick="downloadProposalPDFFromLib()">Download Download PDF</button>
+    <button class="btn btn-ghost btn-sm" onclick="copyProposalFromLib()">Copy Copy</button>
   </div>
 </div>
 
@@ -377,8 +377,8 @@ select option{background:var(--surface);}
     </div>
     <div class="modal-actions">
       <button class="btn btn-purple btn-sm" onclick="openProposalFromModal()">-> View Proposal</button>
-      <button class="btn btn-accent2 btn-sm" onclick="downloadPDFFromModal()">â†“ Audit PDF</button>
-      <button class="btn btn-ghost btn-sm" onclick="copyReportFromModal()">âŽ˜ Copy</button>
+      <button class="btn btn-accent2 btn-sm" onclick="downloadPDFFromModal()">Download Audit PDF</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyReportFromModal()">Copy Copy</button>
       <button class="btn btn-danger btn-sm" onclick="deleteAuditFromModal()">âœ• Delete</button>
     </div>
   </div>
@@ -814,15 +814,15 @@ function generatePDF(r,clientName,industry,teamSize,date){
   function secTitle(t){chk(14);doc.setFillColor(232,255,71);doc.rect(m,y,maxW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text(t.toUpperCase(),m+3,y+5);y+=11;}
   function bodyTxt(t,sz=9){doc.setFont('helvetica','normal');doc.setFontSize(sz);doc.setTextColor(200,200,200);const lines=doc.splitTextToSize(t,maxW);lines.forEach(l=>{chk(6);doc.text(l,m,y);y+=5.5;});y+=2;}
   doc.setFillColor(10,10,10);doc.rect(0,0,pw,297,'F');
-  // Logo mark
-  const lx=pw-m-14,ly=18,ls=14;
-  doc.setDrawColor(225,29,72);doc.setLineWidth(0.6);doc.rect(lx,ly,ls,ls);
-  doc.setDrawColor(59,130,246);doc.setLineWidth(0.5);doc.rect(lx+2,ly+2,ls-4,ls-4);
-  doc.setFillColor(225,29,72);doc.rect(lx-1,ly-1,5,1.5,'F');
-  doc.setFillColor(59,130,246);doc.rect(lx+ls-4,ly+ls-0.5,5,1.5,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(240,240,240);doc.text('R',lx+4.5,ly+9.5);
-  // Brand name next to logo
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(180,180,180);doc.setCharSpace(1.5);doc.text('RATOVA AI',lx-28,ly+9);doc.setCharSpace(0);
+  // Logo mark - top right
+  const ls=14,lx=pw-m-ls,ly=18;
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.setCharSpace(2.5);doc.text('RATOVA AI',lx-38,ly+9);doc.setCharSpace(0);
+  doc.setDrawColor(225,29,72);doc.setLineWidth(1);doc.rect(lx,ly,ls,ls);
+  doc.setDrawColor(59,130,246);doc.setLineWidth(0.7);doc.rect(lx+3,ly+3,ls-6,ls-6);
+  doc.setFillColor(225,29,72);doc.rect(lx-2,ly-2,5,2,'F');
+  doc.setFillColor(59,130,246);doc.rect(lx+ls-3,ly+ls,5,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+  const rW1=doc.getTextWidth('R');doc.text('R',lx+(ls/2)-(rW1/2),ly+(ls/2)+3.2);
   // Audit badge
   doc.setFillColor(232,255,71);doc.rect(m,20,42,6,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('AI OPPORTUNITY AUDIT',m+2,24.5);
   doc.setFontSize(20);doc.setTextColor(240,240,240);doc.text(clientName,m,40);
@@ -863,14 +863,15 @@ function generateProposalPDF(p,clientName,agencyName,agencyEmail,date){
   function bodyTxt(t,sz=9,col=[200,200,200]){doc.setFont('helvetica','normal');doc.setFontSize(sz);doc.setTextColor(...col);const lines=doc.splitTextToSize(t,maxW);lines.forEach(l=>{chk(6);doc.text(l,m,y);y+=5.5;});y+=2;}
   // Cover
   doc.setFillColor(10,10,10);doc.rect(0,0,pw,297,'F');
-  // Logo mark
-  const lx2=pw-m-14,ly2=20,ls2=14;
-  doc.setDrawColor(225,29,72);doc.setLineWidth(0.6);doc.rect(lx2,ly2,ls2,ls2);
-  doc.setDrawColor(59,130,246);doc.setLineWidth(0.5);doc.rect(lx2+2,ly2+2,ls2-4,ls2-4);
-  doc.setFillColor(225,29,72);doc.rect(lx2-1,ly2-1,5,1.5,'F');
-  doc.setFillColor(59,130,246);doc.rect(lx2+ls2-4,ly2+ls2-0.5,5,1.5,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(240,240,240);doc.text('R',lx2+4.5,ly2+9.5);
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(180,180,180);doc.setCharSpace(1.5);doc.text('RATOVA AI',lx2-28,ly2+9);doc.setCharSpace(0);
+  // Logo mark - top right
+  const ls2=14,lx2=pw-m-ls2,ly2=18;
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.setCharSpace(2.5);doc.text('RATOVA AI',lx2-38,ly2+9);doc.setCharSpace(0);
+  doc.setDrawColor(225,29,72);doc.setLineWidth(1);doc.rect(lx2,ly2,ls2,ls2);
+  doc.setDrawColor(59,130,246);doc.setLineWidth(0.7);doc.rect(lx2+3,ly2+3,ls2-6,ls2-6);
+  doc.setFillColor(225,29,72);doc.rect(lx2-2,ly2-2,5,2,'F');
+  doc.setFillColor(59,130,246);doc.rect(lx2+ls2-3,ly2+ls2,5,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+  const rW2=doc.getTextWidth('R');doc.text('R',lx2+(ls2/2)-(rW2/2),ly2+(ls2/2)+3.2);
   // Proposal badge
   doc.setFillColor(232,255,71);doc.rect(m,22,42,6,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('PROPOSAL',m+2,26.5);
   doc.setFontSize(22);doc.setTextColor(240,240,240);doc.text(clientName,m,44);
@@ -931,10 +932,10 @@ function buildProposalText(p){
   return t;
 }
 
-function copyReport(){navigator.clipboard.writeText(reportText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
-function copyProposal(){navigator.clipboard.writeText(proposalText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy Proposal',2000);});}
-function copyReportFromModal(){if(!modalAuditId)return;const a=getAudits().find(x=>x.id===modalAuditId);if(!a)return;navigator.clipboard.writeText(a.plainText||'').then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
-function copyProposalFromLib(){const a=getAudits().find(x=>x.id===libProposalAuditId);if(!a?.proposalText)return;navigator.clipboard.writeText(a.proposalText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
+function copyReport(){navigator.clipboard.writeText(reportText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='Copy Copy',2000);});}
+function copyProposal(){navigator.clipboard.writeText(proposalText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='Copy Copy Proposal',2000);});}
+function copyReportFromModal(){if(!modalAuditId)return;const a=getAudits().find(x=>x.id===modalAuditId);if(!a)return;navigator.clipboard.writeText(a.plainText||'').then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='Copy Copy',2000);});}
+function copyProposalFromLib(){const a=getAudits().find(x=>x.id===libProposalAuditId);if(!a?.proposalText)return;navigator.clipboard.writeText(a.proposalText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='Copy Copy',2000);});}
 
 // â”€â”€ LIBRARY â”€â”€
 function renderLibrary(){
@@ -947,7 +948,7 @@ function renderLibrary(){
     </div>
     <div class="audit-card-actions" onclick="event.stopPropagation()">
       ${a.proposal?`<button class="btn btn-purple btn-sm" onclick="openProposalFromLib('${a.id}')">Proposal</button>`:''}
-      <button class="btn btn-accent2 btn-sm" onclick="downloadPDFById('${a.id}')">â†“ PDF</button>
+      <button class="btn btn-accent2 btn-sm" onclick="downloadPDFById('${a.id}')">Download PDF</button>
       <button class="btn btn-danger btn-sm" onclick="deleteAudit('${a.id}')">âœ•</button>
     </div>
   </div>`).join('');
@@ -1051,7 +1052,7 @@ async function generateFollowUp(){
   try{
     const res = await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
       body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,messages:[{role:"user",content:prompt}]})
     });
     const data = await res.json();
