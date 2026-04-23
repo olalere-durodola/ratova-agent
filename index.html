@@ -976,24 +976,55 @@ async function reviewProposal(){
     + '5. PRICING ISSUES - pricing that seems off for the scope described\n'
     + '6. TONE ISSUES - anything too salesy, desperate, or unprofessional\n'
     + '7. STRONG POINTS - what is working well and should be kept\n\n'
-    + 'For each issue: state the exact text, why it is a problem, and the specific fix.\n'
-    + 'Start with a one-line overall verdict: Ready to send OR Needs minor fixes OR Needs significant fixes.\n'
-    + 'Be direct and specific. Format as plain text with clear section headers.';
+    + 'Return ONLY a JSON object with no markdown:\n'
+    + '{"verdict":"Ready to send|Needs minor fixes|Needs significant fixes",'
+    + '"issues":[{"category":"FALSE CLAIMS|WEAK COPY|MISSING SPECIFICS|RISKY GUARANTEES|PRICING ISSUES|TONE ISSUES","field":"which proposal field this affects e.g. whyUs|guarantee|tagline|problemStatement|ourApproach|closingLine","problemText":"exact text that is problematic","whyIssue":"why this is a problem","suggestedFix":"specific replacement text or instruction"}],'
+    + '"strongPoints":["what is working well 1","what is working well 2"]}';
 
   var btn = document.querySelector('#reviewSection .btn-crimson');
   if(btn){ btn.textContent = '...Reviewing'; btn.disabled = true; }
   try{
     var raw = await callClaude(prompt, 1500);
-    var formatted = raw
-      .replace(/\n\n/g,'<br><br>')
-      .replace(/\n/g,'<br>')
-      .replace(/(Ready to send)/g,'<span class="verdict-ready">$1</span>')
-      .replace(/(Needs minor fixes)/g,'<span class="verdict-minor">$1</span>')
-      .replace(/(Needs significant fixes)/g,'<span class="verdict-major">$1</span>')
-      .replace(/\b(FALSE CLAIMS|WEAK COPY|MISSING SPECIFICS|RISKY GUARANTEES|PRICING ISSUES|TONE ISSUES|STRONG POINTS)\b/g,'<strong style="color:var(--accent2)">$1</strong>');
-    document.getElementById('reviewBox').innerHTML = formatted;
-    document.getElementById('reviewOutput').style.display = 'block';
-    window._reviewText = raw;
+    var parsed;
+    try{ parsed = JSON.parse(raw); } catch(e){ parsed = null; }
+    if(!parsed || !parsed.issues){
+      document.getElementById('reviewBox').innerHTML = '<div style="white-space:pre-wrap;font-size:12px;color:#ccc;">' + raw.replace(/</g,'&lt;') + '</div>';
+      document.getElementById('reviewOutput').style.display = 'block';
+      window._reviewText = raw;
+    } else {
+      window._reviewData = parsed;
+      var verdictClass = parsed.verdict === 'Ready to send' ? 'verdict-ready' : parsed.verdict === 'Needs minor fixes' ? 'verdict-minor' : 'verdict-major';
+      var h = '<div class="' + verdictClass + '" style="margin-bottom:16px;font-size:15px;">' + (parsed.verdict||'Review complete') + '</div>';
+      if(parsed.strongPoints && parsed.strongPoints.length){
+        h += '<div class="good" style="margin-bottom:16px;"><strong style="color:var(--accent2)">STRONG POINTS</strong><br>';
+        h += parsed.strongPoints.map(function(s){ return '+ ' + s; }).join('<br>') + '</div>';
+      }
+      if(parsed.issues && parsed.issues.length){
+        h += '<div style="font-family:Syne,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--muted);margin-bottom:10px;">ISSUES FOUND -- tick the fixes you want applied</div>';
+        parsed.issues.forEach(function(issue, i){
+          h += '<div class="issue" style="margin-bottom:12px;">';
+          h += '<label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">';
+          h += '<input type="checkbox" class="review-fix-cb" data-idx="' + i + '" style="margin-top:3px;flex-shrink:0;accent-color:var(--accent);">';
+          h += '<div>';
+          h += '<div style="font-size:10px;font-weight:700;color:var(--danger);letter-spacing:0.08em;margin-bottom:4px;">' + (issue.category||'ISSUE') + '</div>';
+          h += '<div style="font-size:11px;color:#aaa;margin-bottom:4px;"><strong style="color:#ddd">Problem:</strong> ' + (issue.problemText||'') + '</div>';
+          h += '<div style="font-size:11px;color:#aaa;margin-bottom:4px;"><strong style="color:#ddd">Why:</strong> ' + (issue.whyIssue||'') + '</div>';
+          h += '<div style="font-size:11px;color:var(--accent2);"><strong style="color:#ddd">Fix:</strong> ' + (issue.suggestedFix||'') + '</div>';
+          h += '</div></label></div>';
+        });
+        h += '<div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">';
+        h += '<button class="btn btn-ghost btn-sm" onclick="selectAllFixes()">Select All</button>';
+        h += '<button class="btn btn-ghost btn-sm" onclick="deselectAllFixes()">Deselect All</button>';
+        h += '<button class="btn btn-primary" onclick="applySelectedFixes()">Apply Selected Fixes to Proposal</button>';
+        h += '</div>';
+        h += '<div id="applyFixesMsg" style="margin-top:8px;"></div>';
+      } else {
+        h += '<div class="good">No issues found. Proposal looks good.</div>';
+      }
+      document.getElementById('reviewBox').innerHTML = h;
+      document.getElementById('reviewOutput').style.display = 'block';
+      window._reviewText = (parsed.verdict||'') + ': ' + (parsed.issues||[]).length + ' issues found';
+    }
   }catch(err){
     errEl.innerHTML = '<div class="error-box">Review failed: ' + err.message + '</div>';
   }finally{
@@ -1424,6 +1455,55 @@ function downloadSavedProposalPDF(id){
   var a = getAudits().find(function(x){ return x.id === id; });
   if(!a || !a.proposal) return;
   generateProposalPDF(a.proposal, a.clientName, a.agencyName, a.agencyEmail, a.date);
+}
+
+
+// ============================================================
+// REVIEW FIX HELPERS
+// ============================================================
+function selectAllFixes(){
+  document.querySelectorAll('.review-fix-cb').forEach(function(cb){ cb.checked = true; });
+}
+
+function deselectAllFixes(){
+  document.querySelectorAll('.review-fix-cb').forEach(function(cb){ cb.checked = false; });
+}
+
+async function applySelectedFixes(){
+  if(!currentProposal || !window._reviewData) return;
+  var selected = [];
+  document.querySelectorAll('.review-fix-cb:checked').forEach(function(cb){
+    var idx = parseInt(cb.getAttribute('data-idx'));
+    if(window._reviewData.issues[idx]) selected.push(window._reviewData.issues[idx]);
+  });
+  if(!selected.length){
+    document.getElementById('applyFixesMsg').innerHTML = '<div class="error-box">Select at least one fix to apply.</div>';
+    return;
+  }
+  var msgEl = document.getElementById('applyFixesMsg');
+  msgEl.innerHTML = '<div style="color:var(--accent);font-size:11px;">Applying ' + selected.length + ' fix(es)...</div>';
+  var fixList = selected.map(function(f, i){
+    return (i+1) + '. Field: ' + f.field + ' | Fix: ' + f.suggestedFix;
+  }).join('; ');
+  var prompt = 'You are rewriting a proposal for ' + currentClientName + ' to fix specific issues identified in a review.\n\n'
+    + 'CURRENT PROPOSAL:\n' + JSON.stringify(currentProposal) + '\n\n'
+    + 'FIXES TO APPLY:\n' + fixList + '\n\n'
+    + 'Apply ALL the fixes above to the relevant fields of the proposal. Keep everything else exactly the same.\n'
+    + 'Return ONLY the updated proposal as a JSON object with the same structure as the input. No markdown.';
+  try{
+    var raw = await callClaude(prompt, 2500);
+    var updated = JSON.parse(raw);
+    currentProposal = updated;
+    renderProposal(updated, 'proposalContent');
+    msgEl.innerHTML = '<div class="save-msg">' + selected.length + ' fix(es) applied. Proposal updated above.</div>';
+    // Hide review output to prompt re-review
+    setTimeout(function(){
+      document.getElementById('reviewOutput').style.display = 'none';
+      msgEl.innerHTML = '';
+    }, 3000);
+  }catch(err){
+    msgEl.innerHTML = '<div class="error-box">Failed to apply fixes: ' + err.message + '</div>';
+  }
 }
 
 </script>
