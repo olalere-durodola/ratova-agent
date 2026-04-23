@@ -228,7 +228,7 @@ select option{background:var(--surface);}
         <label>Team Size</label>
         <select id="teamSize">
           <option value="">Select...</option>
-          <option>1â€“5</option><option>6â€“20</option><option>21â€“50</option><option>51â€“200</option><option>200+</option>
+          <option>1-5</option><option>6-20</option><option>21-50</option><option>51-200</option><option>200+</option>
         </select>
       </div>
     </div>
@@ -243,13 +243,18 @@ select option{background:var(--surface);}
       </div>
     </div>
     <div class="input-group">
+      <label>Anthropic API Key <span>*</span></label>
+      <input type="password" id="apiKey" placeholder="sk-ant-..." style="letter-spacing:1px;"/>
+      <div class="char-hint">Your key is saved in this browser automatically. <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2);">Get your key -></a></div>
+    </div>
+    <div class="input-group">
       <label>Discovery Call Transcript <span>*</span></label>
-      <textarea id="transcript" placeholder="Paste your full discovery call transcript here...&#10;&#10;The more detail the better. Tool mentions, time estimates, frustrations, workflows â€” include everything."></textarea>
-      <div class="char-hint" id="charHint">0 characters â€” aim for 500+ for best results</div>
+      <textarea id="transcript" placeholder="Paste your full discovery call transcript here...&#10;&#10;The more detail the better. Tool mentions, time estimates, frustrations, workflows -- include everything."></textarea>
+      <div class="char-hint" id="charHint">0 characters -- aim for 500+ for best results</div>
     </div>
     <div id="inputError"></div>
     <div class="actions">
-      <button class="btn btn-primary" onclick="startAnalysis()">â–¶ Run Full Analysis</button>
+      <button class="btn btn-primary" onclick="startAnalysis()">> Run Full Analysis</button>
     </div>
   </div>
 
@@ -269,17 +274,17 @@ select option{background:var(--surface);}
     <div class="report-header">
       <div>
         <div class="badge">AI Opportunity Audit</div>
-        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-top:7px;" id="reportTitle">â€”</div>
+        <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-top:7px;" id="reportTitle">--</div>
       </div>
       <div class="report-meta" id="reportMeta"></div>
     </div>
     <div class="report-body" id="reportBody"></div>
     <div class="actions">
-      <button class="btn btn-primary" onclick="goToProposal()">â†’ Generate Proposal</button>
+      <button class="btn btn-primary" onclick="goToProposal()">-> Generate Proposal</button>
       <button class="btn btn-primary" onclick="saveAudit()">ðŸ’¾ Save Audit</button>
       <button class="btn btn-accent2" onclick="downloadPDF()">â†“ PDF</button>
       <button class="btn btn-ghost" onclick="copyReport()">âŽ˜ Copy</button>
-      <button class="btn btn-ghost" onclick="resetTool()">â† New</button>
+      <button class="btn btn-ghost" onclick="resetTool()"><- New</button>
     </div>
     <div id="saveMsg"></div>
   </div>
@@ -291,8 +296,8 @@ select option{background:var(--surface);}
       <button class="btn btn-primary" onclick="saveAudit()">ðŸ’¾ Save Audit + Proposal</button>
       <button class="btn btn-accent2" onclick="downloadProposalPDF()">â†“ Proposal PDF</button>
       <button class="btn btn-ghost" onclick="copyProposal()">âŽ˜ Copy Proposal</button>
-      <button class="btn btn-ghost" onclick="setStep(3)">â† Back to Report</button>
-      <button class="btn btn-ghost" onclick="resetTool()">â† New Audit</button>
+      <button class="btn btn-ghost" onclick="setStep(3)"><- Back to Report</button>
+      <button class="btn btn-ghost" onclick="resetTool()"><- New Audit</button>
     </div>
     <div id="proposalSaveMsg"></div>
 
@@ -314,13 +319,13 @@ select option{background:var(--surface);}
             <input type="text" id="reportDeliveryDate" placeholder="e.g. Thursday 24th April"/>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="generateFollowUp()" style="margin-top:8px;">&#x2709; Generate Follow-Up Email</button>
+        <button class="btn btn-primary" onclick="generateFollowUp()" style="margin-top:8px;">Email Generate Follow-Up Email</button>
       </div>
       <div id="followupOutput" style="display:none;margin-top:20px;">
         <div class="followup-email" id="followupEmailBox"></div>
         <div class="actions" style="margin-top:12px;">
-          <button class="btn btn-ghost" onclick="copyFollowUp()">&#x2358; Copy Email</button>
-          <button class="btn btn-ghost" onclick="generateFollowUp()">&#x21BA; Regenerate</button>
+          <button class="btn btn-ghost" onclick="copyFollowUp()">Copy Copy Email</button>
+          <button class="btn btn-ghost" onclick="generateFollowUp()">Refresh Regenerate</button>
         </div>
         <div id="followupCopyMsg" style="margin-top:8px;"></div>
       </div>
@@ -342,7 +347,7 @@ select option{background:var(--surface);}
 <div class="view" id="view-proposal">
   <div class="library-header">
     <div class="library-title" id="proposalViewTitle">Proposal</div>
-    <button class="btn btn-ghost btn-sm" onclick="showView('library',document.getElementById('tabLib'))">â† Back</button>
+    <button class="btn btn-ghost btn-sm" onclick="showView('library',document.getElementById('tabLib'))"><- Back</button>
   </div>
   <div id="proposalViewContent"></div>
   <div class="actions" style="margin-top:16px;">
@@ -364,14 +369,14 @@ select option{background:var(--surface);}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px;">
         <div>
           <div class="badge">AI Opportunity Audit</div>
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-top:7px;" id="modalReportTitle">â€”</div>
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-top:7px;" id="modalReportTitle">--</div>
         </div>
         <div class="report-meta" id="modalReportMeta"></div>
       </div>
       <div class="modal-report-body" id="modalReportBody"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-purple btn-sm" onclick="openProposalFromModal()">â†’ View Proposal</button>
+      <button class="btn btn-purple btn-sm" onclick="openProposalFromModal()">-> View Proposal</button>
       <button class="btn btn-accent2 btn-sm" onclick="downloadPDFFromModal()">â†“ Audit PDF</button>
       <button class="btn btn-ghost btn-sm" onclick="copyReportFromModal()">âŽ˜ Copy</button>
       <button class="btn btn-danger btn-sm" onclick="deleteAuditFromModal()">âœ• Delete</button>
@@ -424,15 +429,18 @@ function showView(v,btn){
   if(v==='library')renderLibrary();
 }
 
-function updateCharHint(){const len=document.getElementById('transcript').value.length;const h=document.getElementById('charHint');h.textContent=`${len.toLocaleString()} characters${len<500?' â€” aim for 500+ for best results':' âœ“'}`;h.style.color=len>=500?'var(--accent2)':'var(--muted)';}
+function updateCharHint(){const len=document.getElementById('transcript').value.length;const h=document.getElementById('charHint');h.textContent=`${len.toLocaleString()} characters${len<500?' -- aim for 500+ for best results':' [OK]'}`;h.style.color=len>=500?'var(--accent2)':'var(--muted)';}
 document.getElementById('transcript').addEventListener('input',updateCharHint);
 
 // Persist API key
 const savedKey = localStorage.getItem('ratova_api_key');
-if(savedKey) document.getElementById('apiKey').value = savedKey;
-document.getElementById('apiKey').addEventListener('change', function(){
-  localStorage.setItem('ratova_api_key', this.value.trim());
-});
+const apiKeyEl = document.getElementById('apiKey');
+if(apiKeyEl){
+  if(savedKey) apiKeyEl.value = savedKey;
+  apiKeyEl.addEventListener('change', function(){
+    localStorage.setItem('ratova_api_key', this.value.trim());
+  });
+}
 
 function setStep(n){
   [1,2,3,4].forEach(i=>{
@@ -452,13 +460,13 @@ async function startAnalysis(){
   currentAgencyEmail=document.getElementById('agencyEmail').value.trim()||'hello@youragency.com';
   const transcript=document.getElementById('transcript').value.trim();
   const errEl=document.getElementById('inputError');errEl.innerHTML='';
-  if(!currentClientName||!currentIndustry||!transcript){errEl.innerHTML='<div class="error-box">âš  Please fill in Client Name, Industry, and Transcript.</div>';return;}
+  if(!currentClientName||!currentIndustry||!transcript){errEl.innerHTML='<div class="error-box">[!] Please fill in Client Name, Industry, and Transcript.</div>';return;}
   setStep(2);
-  document.getElementById('processingTitle').textContent='Stage 1 of 2 â€” Extracting Signals';
+  document.getElementById('processingTitle').textContent='Stage 1 of 2 -- Extracting Signals';
   document.getElementById('processingSubtitle').textContent='Reading your transcript and identifying AI opportunities...';
   const signals=await callStage1(transcript);
   if(!signals)return;
-  document.getElementById('processingTitle').textContent='Stage 2 of 2 â€” Building Report';
+  document.getElementById('processingTitle').textContent='Stage 2 of 2 -- Building Report';
   document.getElementById('processingSubtitle').textContent='Generating full audit report from findings...';
   await callStage2(signals,currentClientName,currentIndustry,currentTeamSize);
 }
@@ -468,7 +476,7 @@ async function runLogs(logs,phaseLabel){
   const ph=document.createElement('div');ph.className='log-phase';ph.textContent=phaseLabel;log.appendChild(ph);
   for(let i=0;i<logs.length;i++){
     await sleep(320+Math.random()*240);
-    const line=document.createElement('div');line.className='log-line active';line.innerHTML=`<span>â†’</span> ${logs[i]}`;log.appendChild(line);
+    const line=document.createElement('div');line.className='log-line active';line.innerHTML=`<span>-></span> ${logs[i]}`;log.appendChild(line);
     if(log.children.length>2){const prev=Array.from(log.querySelectorAll('.log-line.active'));if(prev.length>1)prev[0].className='log-line done';}
     await sleep(150);
   }
@@ -476,7 +484,7 @@ async function runLogs(logs,phaseLabel){
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
 async function callStage1(transcript){
-  await runLogs(LOGS_P1,'Phase 1 â€” Signal Extraction');
+  await runLogs(LOGS_P1,'Phase 1 -- Signal Extraction');
   const prompt=`You are an expert AI consultant. Read this discovery call transcript carefully and extract every signal relevant to AI automation opportunities.
 
 TRANSCRIPT:
@@ -498,22 +506,22 @@ Return a JSON object (no markdown) with these fields:
   "painPoints": ["direct pain points expressed by the client"],
   "goals": ["business goals mentioned"],
   "budget": "any budget signals mentioned or 'not discussed'",
-  "decisionMaker": "yes|unclear|no â€” whether the person on the call can make purchasing decisions"
+  "decisionMaker": "yes|unclear|no -- whether the person on the call can make purchasing decisions"
 }`;
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})});
+    const res=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})});
     const data=await res.json();
     const raw=data.content.map(i=>i.text||"").join("");
     return JSON.parse(raw.replace(/```json|```/g,"").trim());
   }catch(err){
-    document.getElementById('processingError').innerHTML=`<div class="error-box">âš  Stage 1 error: ${err.message}. Please try again.</div>`;
+    document.getElementById('processingError').innerHTML=`<div class="error-box">[!] Stage 1 error: ${err.message}. Please try again.</div>`;
     document.getElementById('spinner').style.display='none';
     return null;
   }
 }
 
 async function callStage2(signals,clientName,industry,teamSize){
-  await runLogs(LOGS_P2,'Phase 2 â€” Report Generation');
+  await runLogs(LOGS_P2,'Phase 2 -- Report Generation');
   const prompt=`You are an expert AI agency consultant. Based on the extracted signals below, produce a full AI Opportunity Audit Report. All prices in USD.
 
 CLIENT: ${clientName}
@@ -538,7 +546,7 @@ Return ONLY a JSON object (no markdown):
       "solution": "specific AI solution with tool suggestions",
       "outcome": "expected measurable outcome with numbers where possible",
       "pricing": {
-        "projectFee": "e.g. $2,500 â€“ $4,000",
+        "projectFee": "e.g. $2,500 - $4,000",
         "retainerFee": "e.g. $800/month",
         "pricingNotes": "what project fee covers and what retainer includes"
       }
@@ -564,14 +572,14 @@ Return ONLY a JSON object (no markdown):
     "deprioritize": ["titles"]
   },
   "roadmap": [
-    {"phase":"Phase 1 â€” 0 to 30 Days","focus":"Quick wins","items":["item"]},
-    {"phase":"Phase 2 â€” 30 to 90 Days","focus":"Core automation","items":["item"]},
-    {"phase":"Phase 3 â€” 90+ Days","focus":"Strategic growth","items":["item"]}
+    {"phase":"Phase 1 -- 0 to 30 Days","focus":"Quick wins","items":["item"]},
+    {"phase":"Phase 2 -- 30 to 90 Days","focus":"Core automation","items":["item"]},
+    {"phase":"Phase 3 -- 90+ Days","focus":"Strategic growth","items":["item"]}
   ],
   "nextSteps": "2-3 sentences on recommended next steps"
 }`;
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})});
+    const res=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})});
     const data=await res.json();
     const raw=data.content.map(i=>i.text||"").join("");
     currentReport=JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -579,7 +587,7 @@ Return ONLY a JSON object (no markdown):
     renderReport(currentReport,currentClientName,currentIndustry,currentTeamSize);
     setStep(3);
   }catch(err){
-    document.getElementById('processingError').innerHTML=`<div class="error-box">âš  Stage 2 error: ${err.message}. Please try again.</div>`;
+    document.getElementById('processingError').innerHTML=`<div class="error-box">[!] Stage 2 error: ${err.message}. Please try again.</div>`;
     document.getElementById('spinner').style.display='none';
   }
 }
@@ -588,7 +596,7 @@ Return ONLY a JSON object (no markdown):
 async function goToProposal(){
   if(!currentReport)return;
   setStep(4);
-  document.getElementById('processingTitle').textContent='Stage 3 of 3 â€” Building Proposal';
+  document.getElementById('processingTitle').textContent='Stage 3 of 3 -- Building Proposal';
   document.getElementById('processingSubtitle').textContent='Writing your client-facing proposal...';
   document.getElementById('panel4').className='panel';
   document.getElementById('panel2').className='panel active';
@@ -598,7 +606,7 @@ async function goToProposal(){
 }
 
 async function callStage3(){
-  await runLogs(LOGS_P3,'Phase 3 â€” Proposal Generation');
+  await runLogs(LOGS_P3,'Phase 3 -- Proposal Generation');
   const r=currentReport;
   const ps=r.pricingSummary||{};
   const prompt=`You are a senior AI agency consultant writing a client proposal. Write a full, persuasive, professional proposal based on this audit data.
@@ -612,11 +620,11 @@ AUDIT SUMMARY:
 ${r.executiveSummary}
 
 KEY OPPORTUNITIES:
-${(r.opportunities||[]).map((o,i)=>`${i+1}. ${o.title} â€” ${o.solution} (${o.impact} impact)`).join('\n')}
+${(r.opportunities||[]).map((o,i)=>`${i+1}. ${o.title} -- ${o.solution} (${o.impact} impact)`).join('\n')}
 
 PRICING:
-Project range: ${ps.totalProjectMin}â€“${ps.totalProjectMax}
-Retainer range: ${ps.totalRetainerMin}â€“${ps.totalRetainerMax}
+Project range: ${ps.totalProjectMin}-${ps.totalProjectMax}
+Retainer range: ${ps.totalRetainerMin}-${ps.totalRetainerMax}
 ${ps.recommendation||''}
 
 ROI: ${r.roi?.estimatedAnnualValue} annual value, ${r.roi?.roiMultiple} ROI
@@ -624,12 +632,12 @@ ROI: ${r.roi?.estimatedAnnualValue} annual value, ${r.roi?.roiMultiple} ROI
 Return ONLY a JSON object (no markdown):
 {
   "tagline": "one punchy sentence summarising the opportunity for this client",
-  "problemStatement": "2-3 sentences describing their current situation and what it's costing them â€” written directly to the client using 'you' and 'your'",
-  "ourApproach": "2-3 sentences on how your agency will solve this â€” confident, specific, no fluff",
+  "problemStatement": "2-3 sentences describing their current situation and what it's costing them -- written directly to the client using 'you' and 'your'",
+  "ourApproach": "2-3 sentences on how your agency will solve this -- confident, specific, no fluff",
   "scopeItems": ["list of 4-6 specific deliverables included in the engagement"],
   "timeline": "e.g. 6-8 weeks for full implementation",
   "projectOption": {
-    "price": "e.g. $8,500 â€“ $12,000",
+    "price": "e.g. $8,500 - $12,000",
     "title": "One-Time Implementation",
     "description": "2 sentences on what this covers and who it's best for",
     "includes": ["3-4 bullet points of what's included"]
@@ -640,12 +648,12 @@ Return ONLY a JSON object (no markdown):
     "description": "2 sentences on what this covers and who it's best for",
     "includes": ["3-4 bullet points of what's included"]
   },
-  "whyUs": "2-3 sentences on why your agency is the right choice â€” focus on outcome, not process",
+  "whyUs": "2-3 sentences on why your agency is the right choice -- focus on outcome, not process",
   "guarantee": "1 sentence on what you stand behind",
   "closingLine": "1 compelling closing sentence that creates gentle urgency without being pushy"
 }`;
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})});
+    const res=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})});
     const data=await res.json();
     const raw=data.content.map(i=>i.text||"").join("");
     currentProposal=JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -655,7 +663,7 @@ Return ONLY a JSON object (no markdown):
     document.getElementById('panel4').className='panel active';
     document.getElementById('tabProposal').style.display='inline-flex';
   }catch(err){
-    document.getElementById('processingError').innerHTML=`<div class="error-box">âš  Proposal error: ${err.message}. Please try again.</div>`;
+    document.getElementById('processingError').innerHTML=`<div class="error-box">[!] Proposal error: ${err.message}. Please try again.</div>`;
     document.getElementById('spinner').style.display='none';
     setStep(3);
   }
@@ -666,12 +674,12 @@ function buildReportHTML(r){
   let h='';
   // Key signals box
   if(r.keySignals&&r.keySignals.length){
-    h+=`<div class="signals-box"><div class="signals-title">ðŸ” Key Signals Extracted</div>${r.keySignals.map(s=>`â†’ ${s}`).join('<br>')}</div>`;
+    h+=`<div class="signals-box"><div class="signals-title">ðŸ” Key Signals Extracted</div>${r.keySignals.map(s=>`-> ${s}`).join('<br>')}</div>`;
   }
   h+=`<h2>Executive Summary</h2><p>${r.executiveSummary}</p>`;
   h+=`<h2>Current State</h2><p>${r.currentState}</p>`;
   h+=`<h2>Estimated ROI</h2><div class="roi-box"><div class="roi-item"><label>Time Saved / Week</label><div class="value">${r.roi.timeSavedPerWeek}</div></div><div class="roi-item"><label>Annual Value</label><div class="value">${r.roi.estimatedAnnualValue}</div></div><div class="roi-item"><label>Implementation</label><div class="value">${r.roi.implementationCost}</div></div><div class="roi-item"><label>ROI Multiple</label><div class="value">${r.roi.roiMultiple}</div></div></div>`;
-  h+=`<h2>Opportunity Matrix</h2><div class="matrix"><div class="matrix-cell highlight"><div class="cell-label" style="color:var(--accent)">â­ Quick Wins</div><div class="items">${(r.matrix.quickWins||[]).map(i=>`â†’ ${i}`).join('<br>')||'â€”'}</div></div><div class="matrix-cell"><div class="cell-label" style="color:var(--accent2)">Strategic Bets</div><div class="items">${(r.matrix.strategicBets||[]).map(i=>`â†’ ${i}`).join('<br>')||'â€”'}</div></div><div class="matrix-cell"><div class="cell-label">Fill-ins</div><div class="items">${(r.matrix.fillIns||[]).map(i=>`â†’ ${i}`).join('<br>')||'â€”'}</div></div><div class="matrix-cell"><div class="cell-label" style="color:var(--muted)">Deprioritise</div><div class="items">${(r.matrix.deprioritize||[]).map(i=>`â†’ ${i}`).join('<br>')||'â€”'}</div></div></div><p style="font-size:11px;color:var(--muted)">Rows: Impact (High top, Low bottom) â€” Columns: Effort (Low left, High right)</p>`;
+  h+=`<h2>Opportunity Matrix</h2><div class="matrix"><div class="matrix-cell highlight"><div class="cell-label" style="color:var(--accent)">â­ Quick Wins</div><div class="items">${(r.matrix.quickWins||[]).map(i=>`-> ${i}`).join('<br>')||'--'}</div></div><div class="matrix-cell"><div class="cell-label" style="color:var(--accent2)">Strategic Bets</div><div class="items">${(r.matrix.strategicBets||[]).map(i=>`-> ${i}`).join('<br>')||'--'}</div></div><div class="matrix-cell"><div class="cell-label">Fill-ins</div><div class="items">${(r.matrix.fillIns||[]).map(i=>`-> ${i}`).join('<br>')||'--'}</div></div><div class="matrix-cell"><div class="cell-label" style="color:var(--muted)">Deprioritise</div><div class="items">${(r.matrix.deprioritize||[]).map(i=>`-> ${i}`).join('<br>')||'--'}</div></div></div><p style="font-size:11px;color:var(--muted)">Rows: Impact (High top, Low bottom) -- Columns: Effort (Low left, High right)</p>`;
   h+=`<h2>Opportunities (${r.opportunities.length} Found)</h2>`;
   r.opportunities.forEach(o=>{
     const cc=o.impact==='High'?'':o.impact==='Medium'?' medium':' low';
@@ -680,10 +688,10 @@ function buildReportHTML(r){
     h+=`<div class="opportunity-card${cc}"><div class="opp-title">${o.title}</div><div class="opp-meta"><span class="tag tag-${o.impact.toLowerCase()}">${o.impact} Impact</span><span class="tag tag-effort">${o.effort} Effort</span><span class="tag tag-effort">${o.category}</span></div><div class="opp-text"><strong style="color:#ddd">Now:</strong> ${o.currentState}<br><strong style="color:#ddd">Solution:</strong> ${o.solution}<br><strong style="color:#ddd">Outcome:</strong> ${o.outcome}</div>${pr}</div>`;
   });
   if(r.pricingSummary){const ps=r.pricingSummary;
-    h+=`<h2>Pricing Summary</h2><div class="pricing-summary-box"><div class="pricing-summary-grid"><div class="ps-item"><label>Total Project Range</label><div class="ps-value project-color">${ps.totalProjectMin} â€“ ${ps.totalProjectMax}</div></div><div class="ps-item"><label>Total Retainer Range</label><div class="ps-value retainer-color">${ps.totalRetainerMin} â€“ ${ps.totalRetainerMax}</div></div></div>${ps.recommendation?`<div class="ps-rec">ðŸ’¡ ${ps.recommendation}</div>`:''}</div>`;
+    h+=`<h2>Pricing Summary</h2><div class="pricing-summary-box"><div class="pricing-summary-grid"><div class="ps-item"><label>Total Project Range</label><div class="ps-value project-color">${ps.totalProjectMin} - ${ps.totalProjectMax}</div></div><div class="ps-item"><label>Total Retainer Range</label><div class="ps-value retainer-color">${ps.totalRetainerMin} - ${ps.totalRetainerMax}</div></div></div>${ps.recommendation?`<div class="ps-rec">ðŸ’¡ ${ps.recommendation}</div>`:''}</div>`;
   }
   h+=`<h2>Implementation Roadmap</h2>`;
-  r.roadmap.forEach((p,i)=>{h+=`<div class="roadmap-phase"><div class="phase-num">0${i+1}</div><div class="phase-content"><div class="phase-title">${p.phase} â€” ${p.focus}</div><div class="phase-items">${p.items.map(item=>`â†’ ${item}`).join('<br>')}</div></div></div>`;});
+  r.roadmap.forEach((p,i)=>{h+=`<div class="roadmap-phase"><div class="phase-num">0${i+1}</div><div class="phase-content"><div class="phase-title">${p.phase} -- ${p.focus}</div><div class="phase-items">${p.items.map(item=>`-> ${item}`).join('<br>')}</div></div></div>`;});
   h+=`<h2>Recommended Next Steps</h2><p>${r.nextSteps}</p>`;
   return h;
 }
@@ -694,7 +702,7 @@ function buildMetaHTML(industry,teamSize,oppCount,date){
 
 function renderReport(r,clientName,industry,teamSize){
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('reportTitle').textContent=`${clientName} â€” AI Opportunity Audit`;
+  document.getElementById('reportTitle').textContent=`${clientName} -- AI Opportunity Audit`;
   document.getElementById('reportMeta').innerHTML=buildMetaHTML(industry,teamSize,r.opportunities.length,date);
   document.getElementById('reportBody').innerHTML=buildReportHTML(r);
   reportText=buildPlainText(r,clientName,industry,teamSize);
@@ -710,14 +718,14 @@ function renderProposal(p,containerId){
     <div class="badge" style="margin:0 auto 16px;">Proposal</div>
     <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;">${currentClientName}</div>
     <div style="font-size:13px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;margin-bottom:6px;">${p.tagline}</div>
-    <div style="font-size:11px;color:var(--muted);">Prepared by ${currentAgencyName} Â· ${date}</div>
+    <div style="font-size:11px;color:var(--muted);">Prepared by ${currentAgencyName} . ${date}</div>
   </div>`;
   // Problem
   h+=`<div class="proposal-section"><h3>The Opportunity</h3><div class="proposal-block">${p.problemStatement}</div></div>`;
   // Approach
   h+=`<div class="proposal-section"><h3>Our Approach</h3><div class="proposal-block">${p.ourApproach}</div>
     <div style="margin-top:14px;"><div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">What We'll Deliver</div>
-    ${(p.scopeItems||[]).map(item=>`<div style="display:flex;gap:10px;font-size:12px;color:#ccc;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);flex-shrink:0;">â†’</span>${item}</div>`).join('')}
+    ${(p.scopeItems||[]).map(item=>`<div style="display:flex;gap:10px;font-size:12px;color:#ccc;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent);flex-shrink:0;">-></span>${item}</div>`).join('')}
     <div style="font-size:11px;color:var(--muted);margin-top:10px;">â± Estimated timeline: <strong style="color:var(--text)">${p.timeline}</strong></div>
     </div>
   </div>`;
@@ -729,14 +737,14 @@ function renderProposal(p,containerId){
         <div class="ppc-label">${p.projectOption?.title||'One-Time Project'}</div>
         <div class="ppc-price project-color">${p.projectOption?.price||'TBD'}</div>
         <div class="ppc-desc" style="margin-bottom:14px;">${p.projectOption?.description||''}</div>
-        ${(p.projectOption?.includes||[]).map(i=>`<div style="font-size:11px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);text-align:left;">âœ“ ${i}</div>`).join('')}
+        ${(p.projectOption?.includes||[]).map(i=>`<div style="font-size:11px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);text-align:left;">[OK] ${i}</div>`).join('')}
       </div>
       <div class="proposal-price-card retainer-card">
         <div class="ppc-badge" style="background:var(--accent2);">Option B</div>
         <div class="ppc-label">${p.retainerOption?.title||'Monthly Retainer'}</div>
         <div class="ppc-price retainer-color">${p.retainerOption?.price||'TBD'}</div>
         <div class="ppc-desc" style="margin-bottom:14px;">${p.retainerOption?.description||''}</div>
-        ${(p.retainerOption?.includes||[]).map(i=>`<div style="font-size:11px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);text-align:left;">âœ“ ${i}</div>`).join('')}
+        ${(p.retainerOption?.includes||[]).map(i=>`<div style="font-size:11px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);text-align:left;">[OK] ${i}</div>`).join('')}
       </div>
     </div>
   </div>`;
@@ -750,17 +758,17 @@ function renderProposal(p,containerId){
     <div class="esign-sub">${p.closingLine}<br><br>Select your preferred option below to confirm and we'll be in touch within 24 hours.</div>
     <input class="esign-input" id="esignName" type="text" placeholder="Your full name"/>
     <div class="esign-options">
-      <button class="esign-btn project" onclick="acceptProposal('project')">âœ“ Accept Option A â€” ${p.projectOption?.price||'Project'}</button>
-      <button class="esign-btn retainer" onclick="acceptProposal('retainer')">âœ“ Accept Option B â€” ${p.retainerOption?.price||'Retainer'}</button>
+      <button class="esign-btn project" onclick="acceptProposal('project')">[OK] Accept Option A -- ${p.projectOption?.price||'Project'}</button>
+      <button class="esign-btn retainer" onclick="acceptProposal('retainer')">[OK] Accept Option B -- ${p.retainerOption?.price||'Retainer'}</button>
     </div>
     <div style="font-size:11px;color:var(--muted);">By clicking accept you confirm your interest and agree to a follow-up call. No payment is taken at this stage.</div>
   </div>
   <div class="esign-accepted" id="esignAccepted">
-    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">âœ“ Proposal Accepted</div>
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;">[OK] Proposal Accepted</div>
     <div id="esignConfirmMsg" style="font-size:13px;"></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px;">Send this proposal PDF to your client to confirm. We recommend following up within 24 hours.</div>
   </div>
-  <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--muted);">Prepared by ${currentAgencyName} Â· ${currentAgencyEmail} Â· ${date}</div>`;
+  <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--muted);">Prepared by ${currentAgencyName} . ${currentAgencyEmail} . ${date}</div>`;
   document.getElementById(containerId).innerHTML=h;
 }
 
@@ -785,7 +793,7 @@ function saveAudit(){
   audits.unshift({id,clientName:currentClientName,industry:currentIndustry,teamSize:currentTeamSize,agencyName:currentAgencyName,agencyEmail:currentAgencyEmail,date,report:currentReport,proposal:currentProposal,plainText:reportText,proposalText});
   saveAudits(audits);updateLibCount();
   const msgId=currentProposal?'proposalSaveMsg':'saveMsg';
-  document.getElementById(msgId).innerHTML='<div class="save-msg">âœ“ Saved to library</div>';
+  document.getElementById(msgId).innerHTML='<div class="save-msg">[OK] Saved to library</div>';
 }
 
 // â”€â”€ PDF â”€â”€
@@ -809,9 +817,9 @@ function generatePDF(r,clientName,industry,teamSize,date){
   // Audit badge
   doc.setFillColor(232,255,71);doc.rect(m,20,42,6,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('AI OPPORTUNITY AUDIT',m+2,24.5);
   doc.setFontSize(20);doc.setTextColor(240,240,240);doc.text(clientName,m,40);
-  doc.setFontSize(10);doc.setTextColor(100,100,100);doc.text(`${industry}  Â·  ${teamSize||'N/A'}  Â·  ${date}`,m,50);
+  doc.setFontSize(10);doc.setTextColor(100,100,100);doc.text(`${industry}  .  ${teamSize||'N/A'}  .  ${date}`,m,50);
   doc.setDrawColor(34,34,34);doc.line(m,56,pw-m,56);y=66;
-  if(r.keySignals&&r.keySignals.length){secTitle('Key Signals');r.keySignals.forEach(s=>{bodyTxt(`â†’  ${s}`);});}
+  if(r.keySignals&&r.keySignals.length){secTitle('Key Signals');r.keySignals.forEach(s=>{bodyTxt(`->  ${s}`);});}
   secTitle('Executive Summary');bodyTxt(r.executiveSummary);
   secTitle('Current State');bodyTxt(r.currentState);
   secTitle('Estimated ROI');
@@ -821,7 +829,7 @@ function generatePDF(r,clientName,industry,teamSize,date){
     chk(32);const ic=o.impact==='High'?[232,255,71]:o.impact==='Medium'?[71,255,212]:[100,100,100];
     doc.setFillColor(26,26,26);doc.rect(m,y,maxW,5,'F');doc.setFillColor(...ic);doc.rect(m,y,3,24,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(240,240,240);doc.text(`${i+1}. ${o.title}`,m+6,y+4);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text(`${o.impact} Impact Â· ${o.effort} Effort Â· ${o.category}`,m+6,y+9);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text(`${o.impact} Impact . ${o.effort} Effort . ${o.category}`,m+6,y+9);
     doc.setTextColor(180,180,180);
     const nl=doc.splitTextToSize(`Now: ${o.currentState}`,maxW-8);chk(nl.length*4+4);doc.text(nl,m+6,y+14);y+=24+(nl.length-1)*4;
     const sl=doc.splitTextToSize(`Solution: ${o.solution}`,maxW-8);chk(sl.length*4+4);doc.text(sl,m+6,y);y+=sl.length*4+2;
@@ -829,11 +837,11 @@ function generatePDF(r,clientName,industry,teamSize,date){
     if(o.pricing?.projectFee){chk(14);doc.setFillColor(232,255,71);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.rect(m+6,y,36,5,'F');doc.text('PROJECT FEE',m+8,y+3.5);doc.setFillColor(71,255,212);doc.rect(m+46,y,42,5,'F');doc.text('MONTHLY RETAINER',m+48,y+3.5);doc.setFontSize(10);doc.setTextColor(232,255,71);doc.text(o.pricing.projectFee,m+6,y+11);doc.setTextColor(71,255,212);doc.text(o.pricing.retainerFee||'N/A',m+46,y+11);y+=18;}
     y+=4;
   });
-  if(r.pricingSummary){const ps=r.pricingSummary;secTitle('Pricing Summary');chk(18);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('TOTAL PROJECT RANGE',m,y);doc.setFontSize(12);doc.setTextColor(232,255,71);doc.text(`${ps.totalProjectMin} â€“ ${ps.totalProjectMax}`,m,y+7);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('TOTAL RETAINER RANGE',m+85,y);doc.setFontSize(12);doc.setTextColor(71,255,212);doc.text(`${ps.totalRetainerMin} â€“ ${ps.totalRetainerMax}`,m+85,y+7);y+=16;if(ps.recommendation)bodyTxt(`Recommendation: ${ps.recommendation}`);}
+  if(r.pricingSummary){const ps=r.pricingSummary;secTitle('Pricing Summary');chk(18);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('TOTAL PROJECT RANGE',m,y);doc.setFontSize(12);doc.setTextColor(232,255,71);doc.text(`${ps.totalProjectMin} - ${ps.totalProjectMax}`,m,y+7);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('TOTAL RETAINER RANGE',m+85,y);doc.setFontSize(12);doc.setTextColor(71,255,212);doc.text(`${ps.totalRetainerMin} - ${ps.totalRetainerMax}`,m+85,y+7);y+=16;if(ps.recommendation)bodyTxt(`Recommendation: ${ps.recommendation}`);}
   secTitle('Implementation Roadmap');
-  r.roadmap.forEach((p,i)=>{chk(14);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(232,255,71);doc.text(`0${i+1}  ${p.phase} â€” ${p.focus}`,m,y);y+=5;doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(180,180,180);p.items.forEach(item=>{chk(5);doc.text(`â†’  ${item}`,m+6,y);y+=4.5;});y+=4;});
+  r.roadmap.forEach((p,i)=>{chk(14);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(232,255,71);doc.text(`0${i+1}  ${p.phase} -- ${p.focus}`,m,y);y+=5;doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(180,180,180);p.items.forEach(item=>{chk(5);doc.text(`->  ${item}`,m+6,y);y+=4.5;});y+=4;});
   secTitle('Recommended Next Steps');bodyTxt(r.nextSteps);
-  const tp=doc.internal.getNumberOfPages();for(let p=1;p<=tp;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);doc.text(`AI Opportunity Audit Â· ${clientName} Â· ${date} Â· Page ${p} of ${tp}`,m,291);}
+  const tp=doc.internal.getNumberOfPages();for(let p=1;p<=tp;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);doc.text(`AI Opportunity Audit . ${clientName} . ${date} . Page ${p} of ${tp}`,m,291);}
   doc.save(`AI-Audit-${clientName.replace(/\s+/g,'-')}-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
@@ -858,33 +866,33 @@ function generateProposalPDF(p,clientName,agencyName,agencyEmail,date){
   doc.setFillColor(232,255,71);doc.rect(m,22,42,6,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('PROPOSAL',m+2,26.5);
   doc.setFontSize(22);doc.setTextColor(240,240,240);doc.text(clientName,m,44);
   doc.setFontSize(11);doc.setTextColor(232,255,71);const tl=doc.splitTextToSize(p.tagline||'',maxW);doc.text(tl,m,54);
-  doc.setFontSize(9);doc.setTextColor(100,100,100);doc.text(`Prepared by ${agencyName}  Â·  ${agencyEmail}  Â·  ${date}`,m,54+tl.length*6+4);
+  doc.setFontSize(9);doc.setTextColor(100,100,100);doc.text(`Prepared by ${agencyName}  .  ${agencyEmail}  .  ${date}`,m,54+tl.length*6+4);
   doc.setDrawColor(34,34,34);doc.line(m,72,pw-m,72);y=82;
   secHdr('The Opportunity');bodyTxt(p.problemStatement);
   secHdr('Our Approach');bodyTxt(p.ourApproach);
-  if(p.scopeItems?.length){chk(8);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('DELIVERABLES',m,y);y+=6;p.scopeItems.forEach(item=>{chk(6);doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(180,180,180);doc.text(`â†’  ${item}`,m,y);y+=5;});y+=4;}
+  if(p.scopeItems?.length){chk(8);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('DELIVERABLES',m,y);y+=6;p.scopeItems.forEach(item=>{chk(6);doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(180,180,180);doc.text(`->  ${item}`,m,y);y+=5;});y+=4;}
   if(p.timeline){chk(8);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('TIMELINE',m,y);y+=6;bodyTxt(p.timeline);}
   // Options
   secHdr('Investment Options');
   chk(40);
   // Option A
-  doc.setFillColor(26,26,26);doc.rect(m,y,maxW/2-4,36,'F');doc.setFillColor(232,255,71);doc.rect(m,y,maxW/2-4,5,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('OPTION A â€” '+(p.projectOption?.title||'Project').toUpperCase(),m+2,y+3.5);
+  doc.setFillColor(26,26,26);doc.rect(m,y,maxW/2-4,36,'F');doc.setFillColor(232,255,71);doc.rect(m,y,maxW/2-4,5,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('OPTION A -- '+(p.projectOption?.title||'Project').toUpperCase(),m+2,y+3.5);
   doc.setFontSize(14);doc.setTextColor(232,255,71);doc.text(p.projectOption?.price||'',m+2,y+12);
   const pd=doc.splitTextToSize(p.projectOption?.description||'',maxW/2-10);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160,160,160);doc.text(pd,m+2,y+18);
-  (p.projectOption?.includes||[]).forEach((inc,idx)=>{doc.setFontSize(7);doc.setTextColor(130,130,130);doc.text(`âœ“ ${inc}`,m+2,y+26+idx*4);});
+  (p.projectOption?.includes||[]).forEach((inc,idx)=>{doc.setFontSize(7);doc.setTextColor(130,130,130);doc.text(`[OK] ${inc}`,m+2,y+26+idx*4);});
   // Option B
   const bx=m+maxW/2+4;
-  doc.setFillColor(26,26,26);doc.rect(bx,y,maxW/2-4,36,'F');doc.setFillColor(71,255,212);doc.rect(bx,y,maxW/2-4,5,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('OPTION B â€” '+(p.retainerOption?.title||'Retainer').toUpperCase(),bx+2,y+3.5);
+  doc.setFillColor(26,26,26);doc.rect(bx,y,maxW/2-4,36,'F');doc.setFillColor(71,255,212);doc.rect(bx,y,maxW/2-4,5,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('OPTION B -- '+(p.retainerOption?.title||'Retainer').toUpperCase(),bx+2,y+3.5);
   doc.setFontSize(14);doc.setTextColor(71,255,212);doc.text(p.retainerOption?.price||'',bx+2,y+12);
   const rd=doc.splitTextToSize(p.retainerOption?.description||'',maxW/2-10);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160,160,160);doc.text(rd,bx+2,y+18);
-  (p.retainerOption?.includes||[]).forEach((inc,idx)=>{doc.setFontSize(7);doc.setTextColor(130,130,130);doc.text(`âœ“ ${inc}`,bx+2,y+26+idx*4);});
+  (p.retainerOption?.includes||[]).forEach((inc,idx)=>{doc.setFontSize(7);doc.setTextColor(130,130,130);doc.text(`[OK] ${inc}`,bx+2,y+26+idx*4);});
   y+=42;
   secHdr('Why '+agencyName);bodyTxt(p.whyUs);
   if(p.guarantee){chk(10);doc.setFillColor(20,40,36);doc.rect(m,y,maxW,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(71,255,212);const gl=doc.splitTextToSize('ðŸ›¡ '+p.guarantee,maxW-6);doc.text(gl,m+3,y+5.5);y+=12;}
   secHdr('Next Step',[168,85,247]);
   chk(16);doc.setFillColor(26,20,36);doc.rect(m,y,maxW,14,'F');doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(232,255,71);const cl=doc.splitTextToSize(p.closingLine||'',maxW-8);doc.text(cl,m+4,y+6);y+=18;
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text(`To accept, reply to ${agencyEmail} with your preferred option. No payment taken at this stage.`,m,y);y+=8;
-  const tp=doc.internal.getNumberOfPages();for(let pg=1;pg<=tp;pg++){doc.setPage(pg);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);doc.text(`Proposal Â· ${clientName} Â· ${agencyName} Â· ${date} Â· Page ${pg} of ${tp}`,m,291);}
+  const tp=doc.internal.getNumberOfPages();for(let pg=1;pg<=tp;pg++){doc.setPage(pg);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);doc.text(`Proposal . ${clientName} . ${agencyName} . ${date} . Page ${pg} of ${tp}`,m,291);}
   doc.save(`Proposal-${clientName.replace(/\s+/g,'-')}-${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
@@ -897,27 +905,27 @@ function downloadProposalPDFFromLib(){const a=getAudits().find(x=>x.id===libProp
 // â”€â”€ PLAIN TEXT â”€â”€
 function buildPlainText(r,clientName,industry,teamSize){
   let t=`AI OPPORTUNITY AUDIT\nClient: ${clientName} | Industry: ${industry} | Team: ${teamSize||'N/A'}\nDate: ${new Date().toLocaleDateString()}\n\n`;
-  if(r.keySignals?.length)t+=`KEY SIGNALS\n${r.keySignals.map(s=>`â†’ ${s}`).join('\n')}\n\n`;
+  if(r.keySignals?.length)t+=`KEY SIGNALS\n${r.keySignals.map(s=>`-> ${s}`).join('\n')}\n\n`;
   t+=`EXECUTIVE SUMMARY\n${r.executiveSummary}\n\nCURRENT STATE\n${r.currentState}\n\nROI\nTime Saved: ${r.roi.timeSavedPerWeek}/week | Annual Value: ${r.roi.estimatedAnnualValue} | Cost: ${r.roi.implementationCost} | ROI: ${r.roi.roiMultiple}\n\nOPPORTUNITIES\n`;
   r.opportunities.forEach((o,i)=>{const p=o.pricing||{};t+=`\n${i+1}. ${o.title} [${o.impact}/${o.effort}/${o.category}]\n   Now: ${o.currentState}\n   Solution: ${o.solution}\n   Outcome: ${o.outcome}\n`;if(p.projectFee)t+=`   Project: ${p.projectFee} | Retainer: ${p.retainerFee||'N/A'}\n`;});
-  if(r.pricingSummary){const ps=r.pricingSummary;t+=`\nPRICING SUMMARY\nProject: ${ps.totalProjectMin}â€“${ps.totalProjectMax} | Retainer: ${ps.totalRetainerMin}â€“${ps.totalRetainerMax}\n${ps.recommendation||''}\n`;}
-  t+=`\nROADMAP\n`;r.roadmap.forEach(p=>{t+=`\n${p.phase} â€” ${p.focus}\n`;p.items.forEach(i=>t+=`  â†’ ${i}\n`);});
+  if(r.pricingSummary){const ps=r.pricingSummary;t+=`\nPRICING SUMMARY\nProject: ${ps.totalProjectMin}-${ps.totalProjectMax} | Retainer: ${ps.totalRetainerMin}-${ps.totalRetainerMax}\n${ps.recommendation||''}\n`;}
+  t+=`\nROADMAP\n`;r.roadmap.forEach(p=>{t+=`\n${p.phase} -- ${p.focus}\n`;p.items.forEach(i=>t+=`  -> ${i}\n`);});
   t+=`\nNEXT STEPS\n${r.nextSteps}`;return t;
 }
 
 function buildProposalText(p){
-  let t=`PROPOSAL FOR ${currentClientName}\nPrepared by ${currentAgencyName} Â· ${currentAgencyEmail}\nDate: ${new Date().toLocaleDateString()}\n\n`;
-  t+=`${p.tagline}\n\nTHE OPPORTUNITY\n${p.problemStatement}\n\nOUR APPROACH\n${p.ourApproach}\n\nDELIVERABLES\n${(p.scopeItems||[]).map(i=>`â†’ ${i}`).join('\n')}\n\nTIMELINE: ${p.timeline}\n\n`;
-  t+=`OPTION A â€” ${p.projectOption?.title}\n${p.projectOption?.price}\n${p.projectOption?.description}\n${(p.projectOption?.includes||[]).map(i=>`âœ“ ${i}`).join('\n')}\n\n`;
-  t+=`OPTION B â€” ${p.retainerOption?.title}\n${p.retainerOption?.price}\n${p.retainerOption?.description}\n${(p.retainerOption?.includes||[]).map(i=>`âœ“ ${i}`).join('\n')}\n\n`;
+  let t=`PROPOSAL FOR ${currentClientName}\nPrepared by ${currentAgencyName} . ${currentAgencyEmail}\nDate: ${new Date().toLocaleDateString()}\n\n`;
+  t+=`${p.tagline}\n\nTHE OPPORTUNITY\n${p.problemStatement}\n\nOUR APPROACH\n${p.ourApproach}\n\nDELIVERABLES\n${(p.scopeItems||[]).map(i=>`-> ${i}`).join('\n')}\n\nTIMELINE: ${p.timeline}\n\n`;
+  t+=`OPTION A -- ${p.projectOption?.title}\n${p.projectOption?.price}\n${p.projectOption?.description}\n${(p.projectOption?.includes||[]).map(i=>`[OK] ${i}`).join('\n')}\n\n`;
+  t+=`OPTION B -- ${p.retainerOption?.title}\n${p.retainerOption?.price}\n${p.retainerOption?.description}\n${(p.retainerOption?.includes||[]).map(i=>`[OK] ${i}`).join('\n')}\n\n`;
   t+=`WHY US\n${p.whyUs}\n\n${p.guarantee||''}\n\n${p.closingLine||''}\n\nContact: ${currentAgencyEmail}`;
   return t;
 }
 
-function copyReport(){navigator.clipboard.writeText(reportText).then(()=>{const b=event.target;b.textContent='âœ“ Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
-function copyProposal(){navigator.clipboard.writeText(proposalText).then(()=>{const b=event.target;b.textContent='âœ“ Copied';setTimeout(()=>b.textContent='âŽ˜ Copy Proposal',2000);});}
-function copyReportFromModal(){if(!modalAuditId)return;const a=getAudits().find(x=>x.id===modalAuditId);if(!a)return;navigator.clipboard.writeText(a.plainText||'').then(()=>{const b=event.target;b.textContent='âœ“ Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
-function copyProposalFromLib(){const a=getAudits().find(x=>x.id===libProposalAuditId);if(!a?.proposalText)return;navigator.clipboard.writeText(a.proposalText).then(()=>{const b=event.target;b.textContent='âœ“ Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
+function copyReport(){navigator.clipboard.writeText(reportText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
+function copyProposal(){navigator.clipboard.writeText(proposalText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy Proposal',2000);});}
+function copyReportFromModal(){if(!modalAuditId)return;const a=getAudits().find(x=>x.id===modalAuditId);if(!a)return;navigator.clipboard.writeText(a.plainText||'').then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
+function copyProposalFromLib(){const a=getAudits().find(x=>x.id===libProposalAuditId);if(!a?.proposalText)return;navigator.clipboard.writeText(a.proposalText).then(()=>{const b=event.target;b.textContent='[OK] Copied';setTimeout(()=>b.textContent='âŽ˜ Copy',2000);});}
 
 // â”€â”€ LIBRARY â”€â”€
 function renderLibrary(){
@@ -926,7 +934,7 @@ function renderLibrary(){
   list.innerHTML=audits.map(a=>`<div class="audit-card" onclick="openAudit('${a.id}')">
     <div class="audit-card-info">
       <div class="audit-card-name">${a.clientName}</div>
-      <div class="audit-card-meta"><span>${a.industry}</span><span>${a.teamSize||'N/A'}</span><span>${a.report.opportunities.length} opportunities</span><span>${a.proposal?'âœ“ Proposal':'No proposal'}</span><span>${a.date}</span></div>
+      <div class="audit-card-meta"><span>${a.industry}</span><span>${a.teamSize||'N/A'}</span><span>${a.report.opportunities.length} opportunities</span><span>${a.proposal?'[OK] Proposal':'No proposal'}</span><span>${a.date}</span></div>
     </div>
     <div class="audit-card-actions" onclick="event.stopPropagation()">
       ${a.proposal?`<button class="btn btn-purple btn-sm" onclick="openProposalFromLib('${a.id}')">Proposal</button>`:''}
@@ -939,8 +947,8 @@ function renderLibrary(){
 function openAudit(id){
   const a=getAudits().find(x=>x.id===id);if(!a)return;
   modalAuditId=id;
-  document.getElementById('modalTitle').textContent=`${a.clientName} â€” Audit Report`;
-  document.getElementById('modalReportTitle').textContent=`${a.clientName} â€” AI Opportunity Audit`;
+  document.getElementById('modalTitle').textContent=`${a.clientName} -- Audit Report`;
+  document.getElementById('modalReportTitle').textContent=`${a.clientName} -- AI Opportunity Audit`;
   document.getElementById('modalReportMeta').innerHTML=buildMetaHTML(a.industry,a.teamSize,a.report.opportunities.length,a.date);
   document.getElementById('modalReportBody').innerHTML=buildReportHTML(a.report);
   document.getElementById('modalOverlay').classList.add('active');
@@ -956,7 +964,7 @@ function openProposalFromModal(){
 function openProposalFromLib(id){
   const a=getAudits().find(x=>x.id===id);if(!a?.proposal)return;
   libProposalAuditId=id;
-  document.getElementById('proposalViewTitle').textContent=`${a.clientName} â€” Proposal`;
+  document.getElementById('proposalViewTitle').textContent=`${a.clientName} -- Proposal`;
   // temp set globals for renderProposal
   const prev={n:currentClientName,ag:currentAgencyName,ae:currentAgencyEmail};
   currentClientName=a.clientName;currentAgencyName=a.agencyName||'Your Agency';currentAgencyEmail=a.agencyEmail||'';
@@ -1002,7 +1010,7 @@ async function generateFollowUp(){
   errEl.innerHTML = '';
 
   if(!currentReport){
-    errEl.innerHTML = '<div class="error-box">&#x26A0; Run the analysis first before generating the follow-up email.</div>';
+    errEl.innerHTML = '<div class="error-box">! Run the analysis first before generating the follow-up email.</div>';
     return;
   }
 
@@ -1032,7 +1040,7 @@ async function generateFollowUp(){
   if(btn){ btn.textContent = '...Drafting'; btn.disabled = true; }
 
   try{
-    const res = await fetch("https://api.anthropic.com/v1/messages",{
+    const res = await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,messages:[{role:"user",content:prompt}]})
@@ -1048,16 +1056,16 @@ async function generateFollowUp(){
     document.getElementById('followupOutput').style.display = 'block';
     window._followupText = 'Subject: ' + parsed.subject + '\n\n' + parsed.body;
   } catch(err){
-    errEl.innerHTML = '<div class="error-box">&#x26A0; Email generation failed: ' + err.message + '</div>';
+    errEl.innerHTML = '<div class="error-box">! Email generation failed: ' + err.message + '</div>';
   } finally {
-    if(btn){ btn.textContent = '&#x2709; Generate Follow-Up Email'; btn.disabled = false; }
+    if(btn){ btn.textContent = 'Email Generate Follow-Up Email'; btn.disabled = false; }
   }
 }
 
 function copyFollowUp(){
   if(!window._followupText) return;
   navigator.clipboard.writeText(window._followupText).then(function(){
-    document.getElementById('followupCopyMsg').innerHTML = '<div class="save-msg">&#x2713; Copied to clipboard</div>';
+    document.getElementById('followupCopyMsg').innerHTML = '<div class="save-msg">OK Copied to clipboard</div>';
     setTimeout(function(){ document.getElementById('followupCopyMsg').innerHTML=''; }, 2000);
   });
 }
@@ -1065,4 +1073,3 @@ function copyFollowUp(){
 </script>>
 </body>
 </html>
-
