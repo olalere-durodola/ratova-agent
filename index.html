@@ -1109,23 +1109,51 @@ function renderLibrary(){
   var audits = getAudits();
   var el = document.getElementById('libraryList');
   if(!audits.length){
-    el.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--muted);"><div style="font-size:40px;margin-bottom:16px;"></div><div>No saved audits yet</div><div style="font-size:11px;margin-top:6px;">Run an audit and click Save to store it here</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--muted);"><div style="font-size:36px;margin-bottom:16px;">[audits]</div><div>No saved audits yet</div><div style="font-size:11px;margin-top:6px;">Run an audit and click Save to store it here</div></div>';
     return;
   }
-  el.innerHTML = audits.map(function(a){
-    return '<div class="audit-card" onclick="openAudit('' + a.id + '')">'
-      + '<div class="audit-card-title">' + a.clientName + ' -- AI Opportunity Audit</div>'
+  el.innerHTML = '';
+  audits.forEach(function(a){
+    var card = document.createElement('div');
+    card.className = 'audit-card';
+    card.innerHTML = '<div class="audit-card-title">' + a.clientName + ' -- AI Opportunity Audit</div>'
       + '<div class="audit-card-meta"><span>' + a.industry + '</span><span>' + (a.teamSize||'N/A') + '</span><span>' + a.date + '</span><span>' + a.report.opportunities.length + ' opportunities</span></div>'
-      + '<div class="audit-card-actions" onclick="event.stopPropagation()">'
-      + '<button class="btn btn-ghost btn-sm" onclick="openAudit('' + a.id + '')">View Report</button>'
-      + (a.proposal ? '<button class="btn btn-ghost btn-sm" onclick="openProposal('' + a.id + '')">View Proposal</button>' : '')
-      + '<button class="btn btn-blue btn-sm" onclick="downloadSavedAuditPDF('' + a.id + '')">Audit PDF</button>'
-      + (a.proposal ? '<button class="btn btn-blue btn-sm" onclick="downloadSavedProposalPDF('' + a.id + '')">Proposal PDF</button>' : '')
-      + '<button class="btn btn-danger btn-sm" onclick="deleteAudit('' + a.id + '')">Delete</button>'
-      + '</div></div>';
-  }).join('');
+      + '<div class="audit-card-actions"></div>';
+    card.addEventListener('click', function(){ openAudit(a.id); });
+    var actions = card.querySelector('.audit-card-actions');
+    actions.addEventListener('click', function(e){ e.stopPropagation(); });
+    var btnView = document.createElement('button');
+    btnView.className = 'btn btn-ghost btn-sm';
+    btnView.textContent = 'View Report';
+    btnView.addEventListener('click', function(){ openAudit(a.id); });
+    actions.appendChild(btnView);
+    if(a.proposal){
+      var btnProp = document.createElement('button');
+      btnProp.className = 'btn btn-ghost btn-sm';
+      btnProp.textContent = 'View Proposal';
+      btnProp.addEventListener('click', function(){ openProposal(a.id); });
+      actions.appendChild(btnProp);
+    }
+    var btnAuditPDF = document.createElement('button');
+    btnAuditPDF.className = 'btn btn-blue btn-sm';
+    btnAuditPDF.textContent = 'Audit PDF';
+    btnAuditPDF.addEventListener('click', function(){ downloadSavedAuditPDF(a.id); });
+    actions.appendChild(btnAuditPDF);
+    if(a.proposal){
+      var btnPropPDF = document.createElement('button');
+      btnPropPDF.className = 'btn btn-blue btn-sm';
+      btnPropPDF.textContent = 'Proposal PDF';
+      btnPropPDF.addEventListener('click', function(){ downloadSavedProposalPDF(a.id); });
+      actions.appendChild(btnPropPDF);
+    }
+    var btnDel = document.createElement('button');
+    btnDel.className = 'btn btn-danger btn-sm';
+    btnDel.textContent = 'Delete';
+    btnDel.addEventListener('click', function(){ deleteAudit(a.id); });
+    actions.appendChild(btnDel);
+    el.appendChild(card);
+  });
 }
-
 function deleteAudit(id){
   var audits = getAudits().filter(function(a){ return a.id !== id; });
   saveAudits(audits);
