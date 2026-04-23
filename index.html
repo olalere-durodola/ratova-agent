@@ -885,8 +885,8 @@ function renderProposal(p, containerId){
   h += '<div class="esign-sub">' + p.closingLine + '<br><br>Select your preferred option below to confirm.</div>';
   h += '<input class="esign-input" id="esignName" type="text" placeholder="Your full name"/>';
   h += '<div class="esign-opts">';
-  h += '<button class="esign-btn proj" onclick="acceptProposal('project')">Accept Option A -- ' + ((p.projectOption||{}).price||'Project') + '</button>';
-  h += '<button class="esign-btn ret" onclick="acceptProposal('retainer')">Accept Option B -- ' + ((p.retainerOption||{}).price||'Retainer') + '</button>';
+  h += '<button class="esign-btn proj" onclick="acceptProposalA()">Accept Option A -- ' + ((p.projectOption||{}).price||'Project') + '</button>';
+  h += '<button class="esign-btn ret" onclick="acceptProposalB()">Accept Option B -- ' + ((p.retainerOption||{}).price||'Retainer') + '</button>';
   h += '</div><div style="font-size:10px;color:var(--muted);margin-top:10px;">By clicking accept you confirm interest. No payment taken at this stage.</div></div>';
   h += '<div class="esign-ok" id="esignOk"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;margin-bottom:6px;">Proposal Accepted</div><div id="esignConfirmMsg" style="font-size:12px;"></div></div>';
   h += '<div style="text-align:center;margin-top:14px;font-size:10px;color:var(--muted);">Prepared by ' + currentAgencyName + ' | ' + currentAgencyEmail + ' | ' + date + '</div>';
