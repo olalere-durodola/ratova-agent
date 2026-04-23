@@ -243,6 +243,11 @@ select option{background:var(--surface);}
       </div>
     </div>
     <div class="input-group">
+      <label>Anthropic API Key <span>*</span></label>
+      <input type="password" id="apiKey" placeholder="sk-ant-..." style="letter-spacing:1px;"/>
+      <div class="char-hint">Your key is saved in this browser automatically. <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2);">Get your key â†’</a></div>
+    </div>
+    <div class="input-group">
       <label>Discovery Call Transcript <span>*</span></label>
       <textarea id="transcript" placeholder="Paste your full discovery call transcript here...&#10;&#10;The more detail the better. Tool mentions, time estimates, frustrations, workflows â€” include everything."></textarea>
       <div class="char-hint" id="charHint">0 characters â€” aim for 500+ for best results</div>
@@ -429,10 +434,13 @@ document.getElementById('transcript').addEventListener('input',updateCharHint);
 
 // Persist API key
 const savedKey = localStorage.getItem('ratova_api_key');
-if(savedKey) document.getElementById('apiKey').value = savedKey;
-document.getElementById('apiKey').addEventListener('change', function(){
-  localStorage.setItem('ratova_api_key', this.value.trim());
-});
+const apiKeyEl = document.getElementById('apiKey');
+if(apiKeyEl){
+  if(savedKey) apiKeyEl.value = savedKey;
+  apiKeyEl.addEventListener('change', function(){
+    localStorage.setItem('ratova_api_key', this.value.trim());
+  });
+}
 
 function setStep(n){
   [1,2,3,4].forEach(i=>{
