@@ -890,19 +890,38 @@ function generateProposalPDF(p,clientName,agencyName,agencyEmail,date){
   if(p.timeline){chk(8);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('TIMELINE',m,y);y+=6;bodyTxt(p.timeline);}
   // Options
   secHdr('Investment Options');
-  chk(40);
-  // Option A
-  doc.setFillColor(26,26,26);doc.rect(m,y,maxW/2-4,36,'F');doc.setFillColor(232,255,71);doc.rect(m,y,maxW/2-4,5,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('OPTION A -- '+(p.projectOption?.title||'Project').toUpperCase(),m+2,y+3.5);
-  doc.setFontSize(14);doc.setTextColor(232,255,71);doc.text(p.projectOption?.price||'',m+2,y+12);
-  const pd=doc.splitTextToSize(p.projectOption?.description||'',maxW/2-10);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160,160,160);doc.text(pd,m+2,y+18);
-  (p.projectOption?.includes||[]).forEach((inc,idx)=>{doc.setFontSize(7);doc.setTextColor(130,130,130);doc.text(`[OK] ${inc}`,m+2,y+26+idx*4);});
-  // Option B
-  const bx=m+maxW/2+4;
-  doc.setFillColor(26,26,26);doc.rect(bx,y,maxW/2-4,36,'F');doc.setFillColor(71,255,212);doc.rect(bx,y,maxW/2-4,5,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('OPTION B -- '+(p.retainerOption?.title||'Retainer').toUpperCase(),bx+2,y+3.5);
-  doc.setFontSize(14);doc.setTextColor(71,255,212);doc.text(p.retainerOption?.price||'',bx+2,y+12);
-  const rd=doc.splitTextToSize(p.retainerOption?.description||'',maxW/2-10);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(160,160,160);doc.text(rd,bx+2,y+18);
-  (p.retainerOption?.includes||[]).forEach((inc,idx)=>{doc.setFontSize(7);doc.setTextColor(130,130,130);doc.text(`[OK] ${inc}`,bx+2,y+26+idx*4);});
-  y+=42;
+  // Calculate dynamic box height based on content
+  var aIncludes = p.projectOption?.includes||[];
+  var bIncludes = p.retainerOption?.includes||[];
+  var boxH = Math.max(50, 30 + Math.max(aIncludes.length, bIncludes.length) * 5);
+  chk(boxH + 10);
+  var bx = m + maxW/2 + 4;
+  var colW = maxW/2 - 4;
+  // Option A box
+  doc.setFillColor(26,26,26); doc.rect(m,y,colW,boxH,'F');
+  doc.setFillColor(232,255,71); doc.rect(m,y,colW,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(0,0,0);
+  doc.text(('OPTION A -- '+(p.projectOption?.title||'Project')).toUpperCase(),m+2,y+4.5);
+  doc.setFontSize(13); doc.setTextColor(232,255,71);
+  doc.text(p.projectOption?.price||'',m+2,y+15);
+  var pd=doc.splitTextToSize(p.projectOption?.description||'',colW-6);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160,160,160);
+  doc.text(pd,m+2,y+22);
+  var ay = y + 22 + pd.length*4.5 + 2;
+  aIncludes.forEach(function(inc){ doc.setFontSize(7); doc.setTextColor(120,120,120); var il=doc.splitTextToSize('- '+inc,colW-6); doc.text(il,m+2,ay); ay+=il.length*4; });
+  // Option B box
+  doc.setFillColor(26,26,26); doc.rect(bx,y,colW,boxH,'F');
+  doc.setFillColor(71,255,212); doc.rect(bx,y,colW,6,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(0,0,0);
+  doc.text(('OPTION B -- '+(p.retainerOption?.title||'Retainer')).toUpperCase(),bx+2,y+4.5);
+  doc.setFontSize(13); doc.setTextColor(71,255,212);
+  doc.text(p.retainerOption?.price||'',bx+2,y+15);
+  var rd=doc.splitTextToSize(p.retainerOption?.description||'',colW-6);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160,160,160);
+  doc.text(rd,bx+2,y+22);
+  var by = y + 22 + rd.length*4.5 + 2;
+  bIncludes.forEach(function(inc){ doc.setFontSize(7); doc.setTextColor(120,120,120); var il=doc.splitTextToSize('- '+inc,colW-6); doc.text(il,bx+2,by); by+=il.length*4; });
+  y += boxH + 8;
   secHdr('Why '+agencyName);bodyTxt(p.whyUs);
   if(p.guarantee){chk(10);doc.setFillColor(20,40,36);doc.rect(m,y,maxW,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(71,255,212);const gl=doc.splitTextToSize('ðŸ›¡ '+p.guarantee,maxW-6);doc.text(gl,m+3,y+5.5);y+=12;}
   secHdr('Next Step',[168,85,247]);
