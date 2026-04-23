@@ -511,10 +511,13 @@ Return a JSON object (no markdown) with these fields:
   try{
     const res=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})});
     const data=await res.json();
-    const raw=data.content.map(i=>i.text||"").join("");
-    return JSON.parse(raw.replace(/```json|```/g,"").trim());
+    if(data.error){throw new Error(data.error.message||JSON.stringify(data.error));}
+    if(!data.content){throw new Error('No content in response. Check your API key. Response: '+JSON.stringify(data).slice(0,200));}
+    const raw=data.content.map(function(i){return i.text||"";}).join("");
+    const cleaned=raw.replace(/```json/g,"").replace(/```/g,"").trim();
+    return JSON.parse(cleaned);
   }catch(err){
-    document.getElementById('processingError').innerHTML=`<div class="error-box">[!] Stage 1 error: ${err.message}. Please try again.</div>`;
+    document.getElementById('processingError').innerHTML='<div class="error-box">[!] Stage 1 error: '+err.message+'. Please try again.</div>';
     document.getElementById('spinner').style.display='none';
     return null;
   }
@@ -581,8 +584,11 @@ Return ONLY a JSON object (no markdown):
   try{
     const res=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})});
     const data=await res.json();
-    const raw=data.content.map(i=>i.text||"").join("");
-    currentReport=JSON.parse(raw.replace(/```json|```/g,"").trim());
+    if(data.error){throw new Error(data.error.message||JSON.stringify(data.error));}
+    if(!data.content){throw new Error('No content in response. Check your API key.');}
+    const raw=data.content.map(function(i){return i.text||"";}).join("");
+    const cleaned=raw.replace(/```json/g,"").replace(/```/g,"").trim();
+    currentReport=JSON.parse(cleaned);
     currentReport._signals=signals;
     renderReport(currentReport,currentClientName,currentIndustry,currentTeamSize);
     setStep(3);
@@ -655,8 +661,11 @@ Return ONLY a JSON object (no markdown):
   try{
     const res=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":document.getElementById("apiKey").value.trim(),"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})});
     const data=await res.json();
-    const raw=data.content.map(i=>i.text||"").join("");
-    currentProposal=JSON.parse(raw.replace(/```json|```/g,"").trim());
+    if(data.error){throw new Error(data.error.message||JSON.stringify(data.error));}
+    if(!data.content){throw new Error('No content in response. Check your API key.');}
+    const raw=data.content.map(function(i){return i.text||"";}).join("");
+    const cleaned=raw.replace(/```json/g,"").replace(/```/g,"").trim();
+    currentProposal=JSON.parse(cleaned);
     renderProposal(currentProposal,'proposalContent');
     proposalText=buildProposalText(currentProposal);
     document.getElementById('panel2').className='panel';
