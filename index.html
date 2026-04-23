@@ -189,7 +189,7 @@ select option{background:var(--surface);}
     <div class="nav-title">Audit <span>Agent</span></div>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" id="tabNew" onclick="showView('new',this)">+ New Audit</button>
+    <button class="nav-tab active" id="tabNew" onclick="showView('new',this)">+New Audit</button>
     <button class="nav-tab" id="tabLib" onclick="showView('library',this)">Saved <span class="count" id="libCount">0</span></button>
     <button class="nav-tab" id="tabProposal" onclick="showView('proposal',this)" style="display:none">Proposal <span class="count" style="background:rgba(168,85,247,0.2);color:#a855f7">NEW</span></button>
   </div>
@@ -280,10 +280,10 @@ select option{background:var(--surface);}
     </div>
     <div class="report-body" id="reportBody"></div>
     <div class="actions">
-      <button class="btn btn-primary" onclick="goToProposal()">-> Generate Proposal</button>
+      <button class="btn btn-primary" onclick="goToProposal()">-&gt; Generate Proposal</button>
       <button class="btn btn-primary" onclick="saveAudit()">Save Audit</button>
       <button class="btn btn-accent2" onclick="downloadPDF()">Download PDF</button>
-      <button class="btn btn-ghost" onclick="copyReport()">Copy Copy</button>
+      <button class="btn btn-ghost" onclick="copyReport()">CopyCopy</button>
       <button class="btn btn-ghost" onclick="resetTool()">New</button>
     </div>
     <div id="saveMsg"></div>
@@ -295,7 +295,7 @@ select option{background:var(--surface);}
     <div class="actions">
       <button class="btn btn-primary" onclick="saveAudit()">Save Audit + Proposal</button>
       <button class="btn btn-accent2" onclick="downloadProposalPDF()">Download Proposal PDF</button>
-      <button class="btn btn-ghost" onclick="copyProposal()">Copy Copy Proposal</button>
+      <button class="btn btn-ghost" onclick="copyProposal()">CopyCopy Proposal</button>
       <button class="btn btn-ghost" onclick="setStep(3)">Back to Report</button>
       <button class="btn btn-ghost" onclick="resetTool()">New Audit</button>
     </div>
@@ -324,8 +324,8 @@ select option{background:var(--surface);}
       <div id="followupOutput" style="display:none;margin-top:20px;">
         <div class="followup-email" id="followupEmailBox"></div>
         <div class="actions" style="margin-top:12px;">
-          <button class="btn btn-ghost" onclick="copyFollowUp()">Copy Copy Email</button>
-          <button class="btn btn-ghost" onclick="generateFollowUp()">Refresh Regenerate</button>
+          <button class="btn btn-ghost" onclick="copyFollowUp()">CopyCopy Email</button>
+          <button class="btn btn-ghost" onclick="generateFollowUp()">RefreshRegenerate</button>
         </div>
         <div id="followupCopyMsg" style="margin-top:8px;"></div>
       </div>
@@ -338,7 +338,7 @@ select option{background:var(--surface);}
 <div class="view" id="view-library">
   <div class="library-header">
     <div class="library-title">Saved Audits</div>
-    <button class="btn btn-danger btn-sm" id="clearAllBtn" style="display:none" onclick="clearAll()">âœ• Clear All</button>
+    <button class="btn btn-danger btn-sm" id="clearAllBtn" style="display:none" onclick="clearAll()"> Clear All</button>
   </div>
   <div id="libraryList"></div>
 </div>
@@ -351,8 +351,8 @@ select option{background:var(--surface);}
   </div>
   <div id="proposalViewContent"></div>
   <div class="actions" style="margin-top:16px;">
-    <button class="btn btn-accent2 btn-sm" onclick="downloadProposalPDFFromLib()">Download Download PDF</button>
-    <button class="btn btn-ghost btn-sm" onclick="copyProposalFromLib()">Copy Copy</button>
+    <button class="btn btn-accent2 btn-sm" onclick="downloadProposalPDFFromLib()">DownloadDownload PDF</button>
+    <button class="btn btn-ghost btn-sm" onclick="copyProposalFromLib()">CopyCopy</button>
   </div>
 </div>
 
@@ -363,7 +363,7 @@ select option{background:var(--surface);}
   <div class="modal">
     <div class="modal-nav">
       <div class="modal-nav-title" id="modalTitle">Audit Report</div>
-      <button class="modal-close" onclick="closeModal()">âœ•</button>
+      <button class="modal-close" onclick="closeModal()"></button>
     </div>
     <div class="modal-body">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px;">
@@ -378,8 +378,8 @@ select option{background:var(--surface);}
     <div class="modal-actions">
       <button class="btn btn-purple btn-sm" onclick="openProposalFromModal()">-> View Proposal</button>
       <button class="btn btn-accent2 btn-sm" onclick="downloadPDFFromModal()">Download Audit PDF</button>
-      <button class="btn btn-ghost btn-sm" onclick="copyReportFromModal()">Copy Copy</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteAuditFromModal()">âœ• Delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyReportFromModal()">CopyCopy</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteAuditFromModal()"> Delete</button>
     </div>
   </div>
 </div>
@@ -814,15 +814,18 @@ function generatePDF(r,clientName,industry,teamSize,date){
   function secTitle(t){chk(14);doc.setFillColor(232,255,71);doc.rect(m,y,maxW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text(t.toUpperCase(),m+3,y+5);y+=11;}
   function bodyTxt(t,sz=9){doc.setFont('helvetica','normal');doc.setFontSize(sz);doc.setTextColor(200,200,200);const lines=doc.splitTextToSize(t,maxW);lines.forEach(l=>{chk(6);doc.text(l,m,y);y+=5.5;});y+=2;}
   doc.setFillColor(10,10,10);doc.rect(0,0,pw,297,'F');
-  // Logo mark - top right
-  const ls=14,lx=pw-m-ls,ly=18;
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.setCharSpace(2.5);doc.text('RATOVA AI',lx-38,ly+9);doc.setCharSpace(0);
-  doc.setDrawColor(225,29,72);doc.setLineWidth(1);doc.rect(lx,ly,ls,ls);
-  doc.setDrawColor(59,130,246);doc.setLineWidth(0.7);doc.rect(lx+3,ly+3,ls-6,ls-6);
-  doc.setFillColor(225,29,72);doc.rect(lx-2,ly-2,5,2,'F');
-  doc.setFillColor(59,130,246);doc.rect(lx+ls-3,ly+ls,5,2,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
-  const rW1=doc.getTextWidth('R');doc.text('R',lx+(ls/2)-(rW1/2),ly+(ls/2)+3.2);
+  // Draw Ratova AI logo
+  (function(){
+    var ls=14, lx=pw-m-ls, ly=19;
+    doc.setDrawColor(225,29,72); doc.setFillColor(10,10,10); doc.setLineWidth(1.2); doc.rect(lx,ly,ls,ls,'FD');
+    doc.setDrawColor(59,130,246); doc.setLineWidth(0.8); doc.rect(lx+3,ly+3,ls-6,ls-6);
+    doc.setFillColor(225,29,72); doc.rect(lx-2,ly-1.5,6,2,'F');
+    doc.setFillColor(59,130,246); doc.rect(lx+ls-4,ly+ls-0.5,6,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+    var rw=doc.getTextWidth('R'); doc.text('R',lx+(ls/2)-(rw/2),ly+(ls/2)+3);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(140,140,140); doc.setCharSpace(2.5);
+    doc.text('RATOVA AI',lx-40,ly+(ls/2)+2); doc.setCharSpace(0);
+  })();
   // Audit badge
   doc.setFillColor(232,255,71);doc.rect(m,20,42,6,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('AI OPPORTUNITY AUDIT',m+2,24.5);
   doc.setFontSize(20);doc.setTextColor(240,240,240);doc.text(clientName,m,40);
@@ -863,15 +866,18 @@ function generateProposalPDF(p,clientName,agencyName,agencyEmail,date){
   function bodyTxt(t,sz=9,col=[200,200,200]){doc.setFont('helvetica','normal');doc.setFontSize(sz);doc.setTextColor(...col);const lines=doc.splitTextToSize(t,maxW);lines.forEach(l=>{chk(6);doc.text(l,m,y);y+=5.5;});y+=2;}
   // Cover
   doc.setFillColor(10,10,10);doc.rect(0,0,pw,297,'F');
-  // Logo mark - top right
-  const ls2=14,lx2=pw-m-ls2,ly2=18;
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.setCharSpace(2.5);doc.text('RATOVA AI',lx2-38,ly2+9);doc.setCharSpace(0);
-  doc.setDrawColor(225,29,72);doc.setLineWidth(1);doc.rect(lx2,ly2,ls2,ls2);
-  doc.setDrawColor(59,130,246);doc.setLineWidth(0.7);doc.rect(lx2+3,ly2+3,ls2-6,ls2-6);
-  doc.setFillColor(225,29,72);doc.rect(lx2-2,ly2-2,5,2,'F');
-  doc.setFillColor(59,130,246);doc.rect(lx2+ls2-3,ly2+ls2,5,2,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
-  const rW2=doc.getTextWidth('R');doc.text('R',lx2+(ls2/2)-(rW2/2),ly2+(ls2/2)+3.2);
+  // Draw Ratova AI logo
+  (function(){
+    var ls=14, lx=pw-m-ls, ly=19;
+    doc.setDrawColor(225,29,72); doc.setFillColor(10,10,10); doc.setLineWidth(1.2); doc.rect(lx,ly,ls,ls,'FD');
+    doc.setDrawColor(59,130,246); doc.setLineWidth(0.8); doc.rect(lx+3,ly+3,ls-6,ls-6);
+    doc.setFillColor(225,29,72); doc.rect(lx-2,ly-1.5,6,2,'F');
+    doc.setFillColor(59,130,246); doc.rect(lx+ls-4,ly+ls-0.5,6,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+    var rw=doc.getTextWidth('R'); doc.text('R',lx+(ls/2)-(rw/2),ly+(ls/2)+3);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(140,140,140); doc.setCharSpace(2.5);
+    doc.text('RATOVA AI',lx-40,ly+(ls/2)+2); doc.setCharSpace(0);
+  })();
   // Proposal badge
   doc.setFillColor(232,255,71);doc.rect(m,22,42,6,'F');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text('PROPOSAL',m+2,26.5);
   doc.setFontSize(22);doc.setTextColor(240,240,240);doc.text(clientName,m,44);
@@ -1080,6 +1086,4 @@ function copyFollowUp(){
   });
 }
 
-</script>>
-</body>
-</html>
+</script>
