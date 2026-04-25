@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ratova AI — Audit Agent</title>
+<title>Ratova AI â€” Audit Agent</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -150,7 +150,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
     <div class="pw-brand">RATOVA AI</div>
   </div>
   <div class="pw-box">
-    <div class="pw-title">AUDIT AGENT — TOOL 1</div>
+    <div class="pw-title">AUDIT AGENT â€” TOOL 1</div>
     <input type="password" class="pw-input" id="pwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
     <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
     <div class="pw-error" id="pwError">Incorrect password</div>
@@ -390,20 +390,36 @@ async function startAnalysis(){
     document.getElementById('procSub').textContent='Reading your transcript and identifying AI opportunities...';
     await runLogs(LOGS_P1,'logList');
 
-    var p1 = 'You are an expert AI consultant. Read this discovery call transcript and extract structured signals.\n\n'
-      +'CLIENT: '+clientName+'\nINDUSTRY: '+industry+'\nTEAM SIZE: '+(teamSize||'Unknown')+'\n\n'
-      +'TRANSCRIPT:\n'+transcript+'\n\n'
-      +'Extract and return ONLY a JSON object (no markdown):\n'
-      +'{"repetitionSignals":["task repeated often 1","task 2"],'
-      +'"bottlenecks":["bottleneck 1","bottleneck 2"],'
-      +'"manualTransfers":["manual process 1","manual process 2"],'
-      +'"toolStack":["tool 1","tool 2"],'
-      +'"painPoints":["specific pain point 1","specific pain point 2","specific pain point 3"],'
-      +'"timeWasted":"X hours per week on Y",'
-      +'"budgetSignals":"what was said about budget or cost",'
-      +'"decisionMaker":"who makes the decision",'
-      +'"urgency":"high/medium/low with reason",'
-      +'"assumptions":["assumption 1 about their setup","assumption 2"]}';
+    var p1 = 'You are an expert AI business analyst. Read this entire discovery call transcript from start to finish and extract EVERY meaningful point mentioned. Do not use a fixed template - let the transcript content determine what you capture.\n\n'
+      + 'CLIENT: ' + clientName + '\nINDUSTRY: ' + industry + '\nTEAM SIZE: ' + (teamSize||'Unknown') + '\n\n'
+      + 'TRANSCRIPT:\n' + transcript + '\n\n'
+      + 'Instructions:\n'
+      + '- Read the entire transcript thoroughly\n'
+      + '- Extract every problem, constraint, tool, process, risk, opportunity, and detail mentioned\n'
+      + '- Group related points naturally based on what the transcript actually contains\n'
+      + '- Do not invent or assume anything not explicitly stated\n'
+      + '- Capture exact numbers, timeframes, and figures mentioned (hours, percentages, costs)\n'
+      + '- Note anything that would affect how a solution is designed or delivered\n'
+      + '- Capture any business goals, expansion plans, or partnership ideas mentioned\n'
+      + '- Flag anything that was tried before and failed, including why\n'
+      + '- Note any legal, regulatory, or compliance constraints mentioned\n'
+      + '- Capture the customer or patient demographic if mentioned\n\n'
+      + 'Return ONLY valid JSON (no markdown). Structure the output based on what the transcript actually contains:\n'
+      + '{'
+      + '"allPoints":["every distinct point extracted from the transcript as a clear statement - be exhaustive"],'
+      + '"toolStack":["every tool, software, or system mentioned by name"],'
+      + '"painPoints":["specific pain with its business impact and any numbers mentioned"],'
+      + '"constraints":["anything that limits or blocks a solution - legal, technical, regulatory, demographic"],'
+      + '"failedAttempts":["anything already tried that did not work and why"],'
+      + '"revenueRisks":["specific risks to revenue, clients, or key relationships"],'
+      + '"opportunities":["automation or improvement opportunities identified from the transcript"],'
+      + '"expansionGoals":"any mention of scaling, expanding, or growing the solution",'
+      + '"timeAndVolumeMetrics":["any numbers mentioned - hours, percentages, call volumes, patient counts"],'
+      + '"decisionMaker":"who makes the final decision",'
+      + '"urgency":"high/medium/low with the specific reason from the transcript",'
+      + '"budgetSignals":"what was said about cost, investment, or budget",'
+      + '"assumptions":["what you are inferring that was not explicitly stated"]'
+      + '}';
 
     var signals = await callClaude(p1, 2000);
 
@@ -412,22 +428,27 @@ async function startAnalysis(){
     document.getElementById('logList').innerHTML='';
     await runLogs(LOGS_P2,'logList');
 
-    var p2 = 'You are an expert AI agency consultant. Based on these extracted signals, produce a full AI Opportunity Audit Report. All prices in USD.\n\n'
-      +'CLIENT: '+clientName+'\nINDUSTRY: '+industry+'\nTEAM SIZE: '+(teamSize||'Unknown')+'\n\n'
-      +'SIGNALS:\n'+JSON.stringify(signals)+'\n\n'
-      +'Return ONLY a JSON object (no markdown). Keep each text field to 2-3 sentences max. Total JSON under 5000 tokens.\n'
-      +'{\n'
-      +'"executiveSummary":"2-3 sentence overview",\n'
-      +'"currentState":"description of how they operate today and where pain is",\n'
-      +'"keySignals":["signal 1","signal 2","signal 3"],\n'
-      +'"painPoints":["specific pain 1 with detail","specific pain 2","specific pain 3"],\n'
-      +'"assumptions":["assumption 1","assumption 2"],\n'
-      +'"roi":{"timeSavedPerWeek":"X hours/week","estimatedAnnualValue":"$X","implementationCost":"$X-$X","roiMultiple":"Xx"},\n'
-      +'"opportunities":[{"title":"opportunity name","painPoint":"the pain it solves","solution":"specific solution","impact":"high/medium/low","effort":"high/medium/low","projectFee":"$X-$X","retainerFee":"$X/month"}],\n'
-      +'"pricingSummary":{"totalProjectMin":"$X","totalProjectMax":"$X","totalRetainerMin":"$X","totalRetainerMax":"$X","recommendation":"project or retainer recommendation"},\n'
-      +'"roadmap":{"phase1":{"title":"0-30 days","items":["item 1","item 2"]},"phase2":{"title":"30-90 days","items":["item 1"]},"phase3":{"title":"90+ days","items":["item 1"]}},\n'
-      +'"nextSteps":"recommended next actions"\n'
-      +'}';
+    var p2 = 'You are an expert AI agency consultant. Based on ALL the extracted signals below, produce a comprehensive AI Opportunity Audit Report. Every point from the transcript should inform this report. All prices in USD.\n\n'
+      + 'CLIENT: ' + clientName + '\nINDUSTRY: ' + industry + '\nTEAM SIZE: ' + (teamSize||'Unknown') + '\n\n'
+      + 'ALL EXTRACTED SIGNALS:\n' + JSON.stringify(signals) + '\n\n'
+      + 'Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n'
+      + 'Return ONLY valid JSON (no markdown). Keep each text field to 2-3 sentences max. Total under 5000 tokens.\n'
+      + '{'
+      + '"executiveSummary":"2-3 sentence overview capturing the most critical findings",'
+      + '"currentState":"how the business operates today and where pain is most acute",'
+      + '"keySignals":["every significant signal extracted - be thorough, include all"],'
+      + '"painPoints":["specific pain with business impact and numbers where mentioned"],'
+      + '"constraints":["every constraint mentioned - legal, technical, regulatory, demographic"],'
+      + '"failedSolutions":["what was tried before and why it did not work"],'
+      + '"revenueRisks":["specific revenue or relationship risks identified"],'
+      + '"expansionOpportunity":"any scaling or expansion opportunity mentioned",'
+      + '"assumptions":["what is being assumed not explicitly stated"],'
+      + '"roi":{"timeSavedPerWeek":"X hours/week based on transcript figures","estimatedAnnualValue":"$X","implementationCost":"$X-$X","roiMultiple":"Xx"},'
+      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high/medium/low","effort":"high/medium/low","projectFee":"$X-$X","retainerFee":"$X/month"}],'
+      + '"pricingSummary":{"totalProjectMin":"$X","totalProjectMax":"$X","totalRetainerMin":"$X","totalRetainerMax":"$X","recommendation":"recommendation"},'
+      + '"roadmap":{"phase1":{"title":"0-30 days","items":["item"]},"phase2":{"title":"30-90 days","items":["item"]},"phase3":{"title":"90+ days","items":["item"]}},'
+      + '"nextSteps":"specific recommended actions"'
+      + '}';
 
     var report = await callClaude(p2, 8000);
     currentReport = report;
@@ -482,7 +503,42 @@ function renderReport(r, clientName, industry, teamSize){
   }
   html += '</div></div>';
 
-  document.getElementById('reportContent').innerHTML = html;
+
+  // Hard Constraints
+  if(r.hardConstraints && r.hardConstraints.length){
+    html += '<div class="report-section"><div class="section-label">HARD CONSTRAINTS</div><div class="report-card"><ul class="signal-list">'
+      +r.hardConstraints.map(function(c){return '<li style="color:var(--yellow);">'+c+'</li>';}).join('')
+      +'</ul></div></div>';
+  }
+
+  // Regulatory Blockers
+  if(r.regulatoryBlockers && r.regulatoryBlockers.length){
+    html += '<div class="report-section"><div class="section-label">REGULATORY BLOCKERS</div><div class="report-card" style="border-color:var(--accent);"><ul class="signal-list">'
+      +r.regulatoryBlockers.map(function(c){return '<li style="color:var(--accent);">'+c+'</li>';}).join('')
+      +'</ul></div></div>';
+  }
+
+  // Failed Solutions
+  if(r.failedSolutions && r.failedSolutions.length){
+    html += '<div class="report-section"><div class="section-label">PREVIOUSLY TRIED -- DID NOT WORK</div><div class="report-card"><ul class="signal-list">'
+      +r.failedSolutions.map(function(c){return '<li style="color:var(--muted);">'+c+'</li>';}).join('')
+      +'</ul></div></div>';
+  }
+
+  // Revenue Risks
+  if(r.revenueRisks && r.revenueRisks.length){
+    html += '<div class="report-section"><div class="section-label">REVENUE RISKS</div><div class="report-card" style="border-color:var(--accent);"><ul class="signal-list">'
+      +r.revenueRisks.map(function(c){return '<li style="color:var(--accent);">'+c+'</li>';}).join('')
+      +'</ul></div></div>';
+  }
+
+  // Expansion Opportunity
+  if(r.expansionOpportunity){
+    html += '<div class="report-section"><div class="section-label">EXPANSION OPPORTUNITY</div><div class="report-card" style="border-color:var(--accent2);"><div class="report-text" style="color:var(--accent2);">'+r.expansionOpportunity+'</div></div></div>';
+  }
+
+
+    document.getElementById('reportContent').innerHTML = html;
 }
 
 function goToSolutions(){
