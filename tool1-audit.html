@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratova AI — Audit Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080810;--surface:#0f0f1a;--surface2:#141425;--border:#1e1e32;
+  --text:#e8e8f0;--muted:#6b6b8a;--accent:#e11d48;--accent2:#3b82f6;
+  --green:#22c55e;--yellow:#eab308;--font-mono:'IBM Plex Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* PASSWORD SCREEN */
+#pwScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:24px;}
+.pw-logo{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.pw-mark{width:44px;height:44px;position:relative;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;}
+.pw-mark::before{content:'';position:absolute;inset:5px;border:1.5px solid var(--accent2);}
+.pw-mark span{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);position:relative;z-index:1;}
+.pw-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:4px;color:var(--text);}
+.pw-box{background:var(--surface);border:1px solid var(--border);padding:32px;width:360px;}
+.pw-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:16px;}
+.pw-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px 14px;font-family:var(--font-mono);font-size:14px;outline:none;margin-bottom:12px;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;}
+.pw-btn:hover{background:#be1239;}
+.pw-error{color:var(--accent);font-size:12px;font-family:var(--font-mono);display:none;margin-top:8px;}
+
+/* MAIN APP */
+#app{display:none;}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.mark{width:32px;height:32px;position:relative;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mark::before{content:'';position:absolute;inset:4px;border:1.5px solid var(--accent2);}
+.mark span{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);position:relative;z-index:1;}
+.brand{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;color:var(--text);}
+.tool-badge{background:var(--accent);color:#fff;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:3px 8px;font-family:'Syne',sans-serif;}
+.header-right{display:flex;align-items:center;gap:12px;}
+.nav-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;}
+.nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* STEPS */
+.steps{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;gap:0;}
+.step{padding:12px 20px;font-size:11px;font-family:var(--font-mono);color:var(--muted);border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px;cursor:default;}
+.step.active{color:var(--text);border-bottom-color:var(--accent);}
+.step.done{color:var(--green);}
+.step-num{width:18px;height:18px;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+
+/* PANELS */
+.panel{display:none;padding:32px;max-width:900px;margin:0 auto;}
+.panel.active{display:block;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.input-group{display:flex;flex-direction:column;gap:6px;}
+.input-group label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:'Syne',sans-serif;}
+.input-group label span{color:var(--accent);}
+.input-group input,.input-group select,.input-group textarea{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.input-group input:focus,.input-group select:focus,.input-group textarea:focus{border-color:var(--accent);}
+.input-group select option{background:var(--surface);}
+.input-group textarea{resize:vertical;min-height:200px;font-family:var(--font-mono);font-size:12px;line-height:1.6;}
+.char-hint{font-size:10px;color:var(--muted);font-family:var(--font-mono);}
+.char-hint a{color:var(--accent2);}
+
+/* BUTTONS */
+.btn{padding:10px 20px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;border:none;cursor:pointer;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#be1239;}
+.btn-blue{background:var(--accent2);color:#fff;}
+.btn-blue:hover{background:#2563eb;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--text);color:var(--text);}
+.btn-green{background:var(--green);color:#000;}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
+
+/* PROCESSING */
+.processing-box{background:var(--surface);border:1px solid var(--border);padding:32px;text-align:center;}
+.processing-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;}
+.processing-sub{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-bottom:24px;}
+.log-list{text-align:left;font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:2;}
+.log-item{display:flex;align-items:center;gap:8px;}
+.log-item.active{color:var(--accent2);}
+.log-item.done{color:var(--green);}
+.log-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* REPORT */
+.report-section{margin-bottom:24px;}
+.section-label{font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--accent);font-family:'Syne',sans-serif;margin-bottom:10px;}
+.report-card{background:var(--surface);border:1px solid var(--border);padding:20px;}
+.report-text{font-size:13px;color:var(--muted);line-height:1.7;}
+.signal-list,.pain-list{list-style:none;}
+.signal-list li,.pain-list li{font-size:12px;font-family:var(--font-mono);color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;}
+.signal-list li::before{content:'->';color:var(--accent);flex-shrink:0;}
+.roi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.roi-card{background:var(--bg);border:1px solid var(--border);padding:14px;}
+.roi-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent2);}
+.roi-lbl{font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* SOLUTION CHECKLIST */
+.solution-item{background:var(--surface);border:1px solid var(--border);padding:16px 20px;margin-bottom:10px;display:flex;align-items:flex-start;gap:16px;}
+.solution-item.selected{border-color:var(--accent2);}
+.solution-left{display:flex;align-items:flex-start;gap:12px;flex:1;}
+.solution-check{width:18px;height:18px;border:2px solid var(--border);flex-shrink:0;cursor:pointer;margin-top:2px;display:flex;align-items:center;justify-content:center;}
+.solution-check.checked{background:var(--accent2);border-color:var(--accent2);}
+.solution-check.checked::after{content:'';width:8px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px);}
+.solution-content{flex:1;}
+.solution-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.solution-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.solution-pain{font-size:10px;color:var(--accent);font-family:var(--font-mono);margin-top:4px;}
+.solution-right{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.procure-toggle{display:flex;border:1px solid var(--border);overflow:hidden;}
+.procure-toggle button{padding:5px 10px;font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;}
+.procure-toggle button.active-build{background:var(--accent);color:#fff;}
+.procure-toggle button.active-procure{background:var(--accent2);color:#fff;}
+.edit-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;padding:5px 10px;cursor:pointer;text-align:center;}
+.edit-btn:hover{border-color:var(--text);color:var(--text);}
+.solution-edit-area{display:none;margin-top:10px;}
+.solution-edit-area textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-size:12px;font-family:var(--font-mono);resize:vertical;min-height:80px;outline:none;}
+.solution-edit-area textarea:focus{border-color:var(--accent);}
+.save-edit-btn{margin-top:6px;background:var(--accent2);color:#fff;border:none;padding:6px 12px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;}
+
+.procure-summary{background:var(--surface);border:1px solid var(--border);padding:14px 20px;margin-bottom:16px;display:flex;gap:24px;}
+.procure-stat{display:flex;flex-direction:column;gap:2px;}
+.procure-stat-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.procure-stat-lbl{font-size:10px;color:var(--muted);}
+
+/* ERROR */
+.error-box{background:rgba(225,29,72,0.1);border:1px solid var(--accent);color:var(--accent);padding:12px 16px;font-size:12px;font-family:var(--font-mono);}
+.save-msg{color:var(--green);font-size:11px;font-family:var(--font-mono);padding:8px 0;}
+
+/* ROADMAP */
+.phase-card{background:var(--surface);border:1px solid var(--border);padding:16px 20px;margin-bottom:8px;}
+.phase-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px;}
+.phase-items{list-style:none;}
+.phase-items li{font-size:12px;font-family:var(--font-mono);color:var(--muted);padding:3px 0;display:flex;gap:8px;}
+.phase-items li::before{content:'->';color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD -->
+<div id="pwScreen">
+  <div class="pw-logo">
+    <div class="pw-mark"><span>R</span></div>
+    <div class="pw-brand">RATOVA AI</div>
+  </div>
+  <div class="pw-box">
+    <div class="pw-title">AUDIT AGENT — TOOL 1</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
+    <div class="pw-error" id="pwError">Incorrect password</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="mark"><span>R</span></div>
+      <div class="brand">RATOVA AI</div>
+      <div class="tool-badge">AUDIT AGENT</div>
+    </div>
+    <div class="header-right"><button class="nav-btn" onclick="window.location.href='index.html'">Hub</button>
+      <button class="nav-btn" onclick="window.open('tool2-proposal.html')">Proposal Tool</button>
+      <button class="nav-btn" onclick="window.open('tool3-followup.html')">Follow-Up Tool</button>
+      <button class="nav-btn" onclick="window.open('tool4-impl.html')">Impl Guide</button>
+      <button class="nav-btn" onclick="resetAll()">New Audit</button>
+    </div>
+  </header>
+
+  <div class="steps">
+    <div class="step active" id="step1"><div class="step-num">1</div>Input</div>
+    <div class="step" id="step2"><div class="step-num">2</div>Analyse</div>
+    <div class="step" id="step3"><div class="step-num">3</div>Report</div>
+    <div class="step" id="step4"><div class="step-num">4</div>Solutions</div>
+  </div>
+
+  <!-- PANEL 1: INPUT -->
+  <div class="panel active" id="panel1">
+    <div class="form-grid">
+      <div class="input-group">
+        <label>Client Business Name <span>*</span></label>
+        <input type="text" id="clientName" placeholder="e.g. Webb & Associates"/>
+      </div>
+      <div class="input-group">
+        <label>Industry <span>*</span></label>
+        <select id="industry">
+          <option value="">Select industry...</option>
+          <option>Legal Services</option>
+          <option>Healthcare</option>
+          <option>Real Estate</option>
+          <option>Financial Services</option>
+          <option>Marketing Agency</option>
+          <option>E-commerce</option>
+          <option>Manufacturing</option>
+          <option>Construction</option>
+          <option>Education</option>
+          <option>Hospitality</option>
+          <option>Non-profit</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Team Size</label>
+        <select id="teamSize">
+          <option value="">Select...</option>
+          <option>1-5</option>
+          <option>6-20</option>
+          <option>21-50</option>
+          <option>51-200</option>
+          <option>200+</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Anthropic API Key <span>*</span></label>
+        <input type="password" id="apiKey" placeholder="sk-ant-..."/>
+      </div>
+    </div>
+    <div class="input-group" style="margin-bottom:8px;">
+      <label>Discovery Call Transcript <span>*</span></label>
+      <textarea id="transcript" placeholder="Paste your full discovery call transcript here...&#10;&#10;The more detail the better. Tool mentions, time estimates, frustrations, workflows - include everything."></textarea>
+      <div class="char-hint" id="charHint">0 characters - aim for 500+ for best results</div>
+    </div>
+    <div id="inputError"></div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="startAnalysis()">Run Full Analysis</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: PROCESSING -->
+  <div class="panel" id="panel2">
+    <div class="processing-box">
+      <div class="processing-title" id="procTitle">Stage 1 of 2 -- Extracting Signals</div>
+      <div class="processing-sub" id="procSub">Reading your transcript and identifying AI opportunities...</div>
+      <div class="log-list" id="logList"></div>
+    </div>
+    <div id="processingError" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- PANEL 3: REPORT -->
+  <div class="panel" id="panel3">
+    <div id="reportContent"></div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="goToSolutions()">Review Solutions</button>
+      <button class="btn btn-ghost" onclick="copyReport()">Copy Report</button>
+      <button class="btn btn-ghost" onclick="saveAudit()">Save Audit</button>
+    </div>
+    <div id="reportSaveMsg"></div>
+  </div>
+
+  <!-- PANEL 4: SOLUTIONS -->
+  <div class="panel" id="panel4">
+    <div class="section-label">SOLUTION REVIEW</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Review each solution below. Select which ones to include. For each, choose whether to <span style="color:var(--accent2);">procure an off-the-shelf tool</span> or <span style="color:var(--accent);">build in-house</span>. Click Edit to refine the description.</p>
+    
+    <div class="procure-summary" id="procureSummary">
+      <div class="procure-stat"><div class="procure-stat-val" id="statTotal">0</div><div class="procure-stat-lbl">Total Solutions</div></div>
+      <div class="procure-stat"><div class="procure-stat-val" id="statSelected" style="color:var(--accent2);">0</div><div class="procure-stat-lbl">Selected</div></div>
+      <div class="procure-stat"><div class="procure-stat-val" id="statProcure" style="color:var(--accent2);">0</div><div class="procure-stat-lbl">Procure</div></div>
+      <div class="procure-stat"><div class="procure-stat-val" id="statBuild" style="color:var(--accent);">0</div><div class="procure-stat-lbl">Build In-House</div></div>
+    </div>
+
+    <div id="solutionList"></div>
+
+    <div id="solutionsError"></div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="confirmSolutions()">Confirm & Save to Library</button>
+      <button class="btn btn-ghost" onclick="setPanel(3)">Back to Report</button>
+    </div>
+    <div id="solutionsSaveMsg"></div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = 'Ratova#Launch26';
+var currentReport = null;
+var currentClientName = '';
+var currentIndustry = '';
+var currentTeamSize = '';
+var currentSolutions = [];
+
+function checkPw(){
+  var val = document.getElementById('pwInput').value;
+  if(val === PASSWORD){
+    document.getElementById('pwScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    var saved = localStorage.getItem('ratova_api_key');
+    if(saved) document.getElementById('apiKey').value = saved;
+    document.getElementById('apiKey').addEventListener('change',function(){
+      localStorage.setItem('ratova_api_key', this.value.trim());
+    });
+    document.getElementById('transcript').addEventListener('input', updateCharHint);
+  } else {
+    document.getElementById('pwError').style.display='block';
+  }
+}
+
+function updateCharHint(){
+  var len = document.getElementById('transcript').value.length;
+  var hint = document.getElementById('charHint');
+  hint.textContent = len + ' characters' + (len < 500 ? ' - aim for 500+ for best results' : ' [OK]');
+}
+
+function setPanel(n){
+  for(var i=1;i<=4;i++){
+    document.getElementById('panel'+i).classList.remove('active');
+    document.getElementById('step'+i).classList.remove('active','done');
+  }
+  document.getElementById('panel'+n).classList.add('active');
+  for(var i=1;i<n;i++) document.getElementById('step'+i).classList.add('done');
+  document.getElementById('step'+n).classList.add('active');
+}
+
+function resetAll(){
+  currentReport=null; currentClientName=''; currentIndustry=''; currentTeamSize=''; currentSolutions=[];
+  document.getElementById('clientName').value='';
+  document.getElementById('transcript').value='';
+  document.getElementById('inputError').innerHTML='';
+  setPanel(1);
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function runLogs(logs, containerId){
+  var el = document.getElementById(containerId||'logList');
+  el.innerHTML='';
+  for(var i=0;i<logs.length;i++){
+    var item = document.createElement('div');
+    item.className='log-item active';
+    item.innerHTML='<div class="log-dot"></div>'+logs[i];
+    el.appendChild(item);
+    await sleep(280);
+    item.className='log-item done';
+    item.innerHTML='<div class="log-dot"></div>'+logs[i];
+  }
+}
+
+function apiHeaders(){
+  return {
+    'Content-Type':'application/json',
+    'x-api-key': document.getElementById('apiKey').value.trim(),
+    'anthropic-version':'2023-06-01',
+    'anthropic-dangerous-direct-browser-access':'true'
+  };
+}
+
+async function callClaude(prompt, maxTokens){
+  var res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers: apiHeaders(),
+    body: JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens: maxTokens, messages:[{role:'user',content:prompt}]})
+  });
+  var data = await res.json();
+  if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+  if(!data.content) throw new Error('No content returned. Check your API key.');
+  var raw = data.content.map(function(i){return i.text||'';}).join('');
+  var cleaned = raw.replace(/[`]{3}json/g,'').replace(/[`]{3}/g,'').trim();
+  return JSON.parse(cleaned);
+}
+
+async function startAnalysis(){
+  var apiKey = document.getElementById('apiKey').value.trim();
+  var clientName = document.getElementById('clientName').value.trim();
+  var industry = document.getElementById('industry').value;
+  var teamSize = document.getElementById('teamSize').value;
+  var transcript = document.getElementById('transcript').value.trim();
+  var errEl = document.getElementById('inputError');
+  errEl.innerHTML='';
+
+  if(!apiKey||!apiKey.startsWith('sk-ant')){
+    errEl.innerHTML='<div class="error-box">Please enter a valid Anthropic API key (starts with sk-ant-).</div>';return;
+  }
+  if(!clientName||!industry||!transcript){
+    errEl.innerHTML='<div class="error-box">Please fill in Client Name, Industry, and Transcript.</div>';return;
+  }
+
+  currentClientName=clientName; currentIndustry=industry; currentTeamSize=teamSize;
+  setPanel(2);
+
+  var LOGS_P1=['Reading transcript structure...','Identifying repetition signals...','Mapping tool stack & integrations...','Detecting workflow bottlenecks...','Flagging manual data transfers...','Extracting time & cost indicators...','Compiling raw signal findings...'];
+  var LOGS_P2=['Scoring opportunity impact...','Calculating ROI estimates...','Building opportunity matrix...','Generating implementation roadmap...','Finalising audit report...'];
+
+  try{
+    document.getElementById('procTitle').textContent='Stage 1 of 2 -- Extracting Signals';
+    document.getElementById('procSub').textContent='Reading your transcript and identifying AI opportunities...';
+    await runLogs(LOGS_P1,'logList');
+
+    var p1 = 'You are an expert AI consultant. Read this discovery call transcript and extract structured signals.\n\n'
+      +'CLIENT: '+clientName+'\nINDUSTRY: '+industry+'\nTEAM SIZE: '+(teamSize||'Unknown')+'\n\n'
+      +'TRANSCRIPT:\n'+transcript+'\n\n'
+      +'Extract and return ONLY a JSON object (no markdown):\n'
+      +'{"repetitionSignals":["task repeated often 1","task 2"],'
+      +'"bottlenecks":["bottleneck 1","bottleneck 2"],'
+      +'"manualTransfers":["manual process 1","manual process 2"],'
+      +'"toolStack":["tool 1","tool 2"],'
+      +'"painPoints":["specific pain point 1","specific pain point 2","specific pain point 3"],'
+      +'"timeWasted":"X hours per week on Y",'
+      +'"budgetSignals":"what was said about budget or cost",'
+      +'"decisionMaker":"who makes the decision",'
+      +'"urgency":"high/medium/low with reason",'
+      +'"assumptions":["assumption 1 about their setup","assumption 2"]}';
+
+    var signals = await callClaude(p1, 2000);
+
+    document.getElementById('procTitle').textContent='Stage 2 of 2 -- Building Audit Report';
+    document.getElementById('procSub').textContent='Generating full AI opportunity audit...';
+    document.getElementById('logList').innerHTML='';
+    await runLogs(LOGS_P2,'logList');
+
+    var p2 = 'You are an expert AI agency consultant. Based on these extracted signals, produce a full AI Opportunity Audit Report. All prices in USD.\n\n'
+      +'CLIENT: '+clientName+'\nINDUSTRY: '+industry+'\nTEAM SIZE: '+(teamSize||'Unknown')+'\n\n'
+      +'SIGNALS:\n'+JSON.stringify(signals)+'\n\n'
+      +'Return ONLY a JSON object (no markdown). Keep each text field to 2-3 sentences max. Total JSON under 5000 tokens.\n'
+      +'{\n'
+      +'"executiveSummary":"2-3 sentence overview",\n'
+      +'"currentState":"description of how they operate today and where pain is",\n'
+      +'"keySignals":["signal 1","signal 2","signal 3"],\n'
+      +'"painPoints":["specific pain 1 with detail","specific pain 2","specific pain 3"],\n'
+      +'"assumptions":["assumption 1","assumption 2"],\n'
+      +'"roi":{"timeSavedPerWeek":"X hours/week","estimatedAnnualValue":"$X","implementationCost":"$X-$X","roiMultiple":"Xx"},\n'
+      +'"opportunities":[{"title":"opportunity name","painPoint":"the pain it solves","solution":"specific solution","impact":"high/medium/low","effort":"high/medium/low","projectFee":"$X-$X","retainerFee":"$X/month"}],\n'
+      +'"pricingSummary":{"totalProjectMin":"$X","totalProjectMax":"$X","totalRetainerMin":"$X","totalRetainerMax":"$X","recommendation":"project or retainer recommendation"},\n'
+      +'"roadmap":{"phase1":{"title":"0-30 days","items":["item 1","item 2"]},"phase2":{"title":"30-90 days","items":["item 1"]},"phase3":{"title":"90+ days","items":["item 1"]}},\n'
+      +'"nextSteps":"recommended next actions"\n'
+      +'}';
+
+    var report = await callClaude(p2, 8000);
+    currentReport = report;
+    currentReport.signals = signals;
+    renderReport(report, clientName, industry, teamSize);
+    setPanel(3);
+
+  }catch(err){
+    document.getElementById('processingError').innerHTML='<div class="error-box">Stage error: '+err.message+'. Please try again.</div>';
+  }
+}
+
+function renderReport(r, clientName, industry, teamSize){
+  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  var html = '';
+
+  html += '<div style="margin-bottom:24px;">'
+    +'<div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:\'Syne\',sans-serif;margin-bottom:4px;">AI OPPORTUNITY AUDIT</div>'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;">'+clientName+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);">'+industry+' &nbsp;.&nbsp; '+(teamSize||'N/A')+' &nbsp;.&nbsp; '+date+'</div>'
+    +'</div>';
+
+  html += '<div class="report-section"><div class="section-label">EXECUTIVE SUMMARY</div><div class="report-card"><div class="report-text">'+r.executiveSummary+'</div></div></div>';
+
+  html += '<div class="report-section"><div class="section-label">KEY SIGNALS</div><div class="report-card"><ul class="signal-list">'+(r.keySignals||[]).map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul></div></div>';
+
+  html += '<div class="report-section"><div class="section-label">PAIN POINTS</div><div class="report-card"><ul class="pain-list">'+(r.painPoints||[]).map(function(p){return '<li style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--font-mono);color:var(--muted);"><span style="color:var(--accent);flex-shrink:0;">-></span>'+p+'</li>';}).join('')+'</ul></div></div>';
+
+  if(r.roi){
+    html += '<div class="report-section"><div class="section-label">ROI ESTIMATE</div><div class="roi-grid">'
+      +'<div class="roi-card"><div class="roi-val">'+r.roi.timeSavedPerWeek+'</div><div class="roi-lbl">Time Saved / Week</div></div>'
+      +'<div class="roi-card"><div class="roi-val">'+r.roi.estimatedAnnualValue+'</div><div class="roi-lbl">Est. Annual Value</div></div>'
+      +'<div class="roi-card"><div class="roi-val" style="color:var(--accent);">'+r.roi.roiMultiple+'</div><div class="roi-lbl">ROI Multiple</div></div>'
+      +'</div></div>';
+  }
+
+  if(r.roadmap){
+    html += '<div class="report-section"><div class="section-label">IMPLEMENTATION ROADMAP</div>'
+      +['phase1','phase2','phase3'].map(function(ph){
+        var p = r.roadmap[ph]; if(!p) return '';
+        return '<div class="phase-card"><div class="phase-title">'+p.title+'</div><ul class="phase-items">'+(p.items||[]).map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul></div>';
+      }).join('')+'</div>';
+  }
+
+  html += '<div class="report-section"><div class="section-label">PRICING SUMMARY</div><div class="report-card">';
+  if(r.pricingSummary){
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'
+      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">PROJECT RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">'+r.pricingSummary.totalProjectMin+' - '+r.pricingSummary.totalProjectMax+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">RETAINER RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent2);">'+r.pricingSummary.totalRetainerMin+' - '+r.pricingSummary.totalRetainerMax+'/mo</div></div>'
+      +'</div>';
+    if(r.pricingSummary.recommendation) html += '<div style="margin-top:12px;font-size:12px;color:var(--muted);">'+r.pricingSummary.recommendation+'</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function goToSolutions(){
+  if(!currentReport || !currentReport.opportunities || currentReport.opportunities.length===0){
+    alert('No opportunities found in report.'); return;
+  }
+  currentSolutions = currentReport.opportunities.map(function(o, i){
+    return {id:i, title:o.title, desc:o.solution, painPoint:o.painPoint, impact:o.impact, projectFee:o.projectFee, retainerFee:o.retainerFee, selected:true, method:'build'};
+  });
+  renderSolutions();
+  setPanel(4);
+}
+
+function renderSolutions(){
+  var list = document.getElementById('solutionList');
+  list.innerHTML = '';
+  currentSolutions.forEach(function(sol, i){
+    var div = document.createElement('div');
+    div.className = 'solution-item' + (sol.selected ? ' selected' : '');
+    div.id = 'sol-'+i;
+    div.innerHTML = 
+      '<div class="solution-left">'
+        +'<div class="solution-check '+(sol.selected?'checked':'')+'" onclick="toggleSolution('+i+')" id="check-'+i+'"></div>'
+        +'<div class="solution-content">'
+          +'<div class="solution-title">'+sol.title+'</div>'
+          +'<div class="solution-desc" id="sol-desc-'+i+'">'+sol.desc+'</div>'
+          +'<div class="solution-pain">Pain: '+sol.painPoint+'</div>'
+          +'<div class="solution-edit-area" id="edit-area-'+i+'">'
+            +'<textarea id="edit-ta-'+i+'">'+sol.desc+'</textarea>'
+            +'<button class="save-edit-btn" onclick="saveEdit('+i+')">Save</button>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="solution-right">'
+        +'<div class="procure-toggle">'
+          +'<button id="btn-build-'+i+'" class="'+(sol.method==='build'?'active-build':'')+'" onclick="setMethod('+i+',\'build\')">Build</button>'
+          +'<button id="btn-procure-'+i+'" class="'+(sol.method==='procure'?'active-procure':'')+'" onclick="setMethod('+i+',\'procure\')">Procure</button>'
+        +'</div>'
+        +'<button class="edit-btn" onclick="toggleEdit('+i+')">Edit</button>'
+      +'</div>';
+    list.appendChild(div);
+  });
+  updateSummary();
+}
+
+function toggleSolution(i){
+  currentSolutions[i].selected = !currentSolutions[i].selected;
+  document.getElementById('check-'+i).className = 'solution-check' + (currentSolutions[i].selected?' checked':'');
+  document.getElementById('sol-'+i).className = 'solution-item' + (currentSolutions[i].selected?' selected':'');
+  updateSummary();
+}
+
+function setMethod(i, method){
+  currentSolutions[i].method = method;
+  document.getElementById('btn-build-'+i).className = method==='build'?'active-build':'';
+  document.getElementById('btn-procure-'+i).className = method==='procure'?'active-procure':'';
+  updateSummary();
+}
+
+function toggleEdit(i){
+  var area = document.getElementById('edit-area-'+i);
+  area.style.display = area.style.display==='block'?'none':'block';
+}
+
+function saveEdit(i){
+  var val = document.getElementById('edit-ta-'+i).value.trim();
+  currentSolutions[i].desc = val;
+  document.getElementById('sol-desc-'+i).textContent = val;
+  document.getElementById('edit-area-'+i).style.display='none';
+}
+
+function updateSummary(){
+  var total = currentSolutions.length;
+  var selected = currentSolutions.filter(function(s){return s.selected;}).length;
+  var procure = currentSolutions.filter(function(s){return s.selected&&s.method==='procure';}).length;
+  var build = currentSolutions.filter(function(s){return s.selected&&s.method==='build';}).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statSelected').textContent = selected;
+  document.getElementById('statProcure').textContent = procure;
+  document.getElementById('statBuild').textContent = build;
+}
+
+function confirmSolutions(){
+  var selected = currentSolutions.filter(function(s){return s.selected;});
+  if(selected.length===0){
+    document.getElementById('solutionsError').innerHTML='<div class="error-box">Select at least one solution to continue.</div>';return;
+  }
+  var auditData = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),
+    clientName: currentClientName,
+    industry: currentIndustry,
+    teamSize: currentTeamSize,
+    report: currentReport,
+    solutions: currentSolutions
+  };
+  var audits = JSON.parse(localStorage.getItem('ratova_audits')||'[]');
+  audits.unshift(auditData);
+  localStorage.setItem('ratova_audits', JSON.stringify(audits));
+  localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
+  document.getElementById('solutionsSaveMsg').innerHTML='<div class="save-msg">Audit saved. You can now open the Proposal Tool, Follow-Up Tool, or Implementation Guide.</div>';
+}
+
+function saveAudit(){
+  if(!currentReport){return;}
+  var auditData = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),
+    clientName: currentClientName,
+    industry: currentIndustry,
+    teamSize: currentTeamSize,
+    report: currentReport,
+    solutions: currentSolutions
+  };
+  localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
+  document.getElementById('reportSaveMsg').innerHTML='<div class="save-msg">Audit saved to browser storage.</div>';
+}
+
+function copyReport(){
+  if(!currentReport){return;}
+  var text = 'AI OPPORTUNITY AUDIT - '+currentClientName+'\n\n'
+    +'EXECUTIVE SUMMARY\n'+currentReport.executiveSummary+'\n\n'
+    +'PAIN POINTS\n'+(currentReport.painPoints||[]).map(function(p,i){return (i+1)+'. '+p;}).join('\n')+'\n\n'
+    +'ROI: '+(currentReport.roi?currentReport.roi.estimatedAnnualValue+' annual value':'')+'\n\n'
+    +'OPPORTUNITIES\n'+(currentReport.opportunities||[]).map(function(o,i){return (i+1)+'. '+o.title+' - '+o.solution;}).join('\n');
+  navigator.clipboard.writeText(text);
+  document.getElementById('reportSaveMsg').innerHTML='<div class="save-msg">Report copied to clipboard.</div>';
+}
+// Auto-unlock if authenticated from hub
+if(sessionStorage.getItem('ratova_auth')==='1'){
+  document.getElementById('pwScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  if(typeof loadAudit === 'function') loadAudit();
+  var savedKey = localStorage.getItem('ratova_api_key');
+  if(savedKey && document.getElementById('apiKey')) document.getElementById('apiKey').value = savedKey;
+}
+</script>
+</body>
+</html>

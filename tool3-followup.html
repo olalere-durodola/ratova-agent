@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratova AI — Follow-Up Email Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#080810;--surface:#0f0f1a;--surface2:#141425;--border:#1e1e32;--text:#e8e8f0;--muted:#6b6b8a;--accent:#e11d48;--accent2:#3b82f6;--green:#22c55e;--font-mono:'IBM Plex Mono',monospace;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+#pwScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:24px;}
+.pw-logo{display:flex;align-items:center;gap:12px;}
+.pw-mark{width:44px;height:44px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;position:relative;}
+.pw-mark::before{content:'';position:absolute;inset:5px;border:1.5px solid var(--accent2);}
+.pw-mark span{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;position:relative;z-index:1;}
+.pw-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:4px;}
+.pw-box{background:var(--surface);border:1px solid var(--border);padding:32px;width:360px;}
+.pw-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:16px;font-family:'Syne',sans-serif;}
+.pw-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px 14px;font-family:var(--font-mono);font-size:14px;outline:none;margin-bottom:12px;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;}
+.pw-error{color:var(--accent);font-size:12px;font-family:var(--font-mono);display:none;margin-top:8px;}
+#app{display:none;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.mark{width:32px;height:32px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+.mark::before{content:'';position:absolute;inset:4px;border:1.5px solid var(--accent2);}
+.mark span{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;position:relative;z-index:1;}
+.brand{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;}
+.tool-badge{background:var(--accent2);color:#fff;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:3px 8px;font-family:'Syne',sans-serif;}
+.main{padding:32px;max-width:860px;margin:0 auto;}
+.section-label{font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--accent);font-family:'Syne',sans-serif;margin-bottom:10px;}
+.card{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+.input-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.input-group label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:'Syne',sans-serif;}
+.input-group input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.input-group input:focus{border-color:var(--accent2);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.btn{padding:10px 20px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;border:none;cursor:pointer;}
+.btn-primary{background:var(--accent2);color:#fff;}
+.btn-primary:hover{background:#2563eb;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--text);color:var(--text);}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.error-box{background:rgba(225,29,72,0.1);border:1px solid var(--accent);color:var(--accent);padding:12px 16px;font-size:12px;font-family:var(--font-mono);}
+.save-msg{color:var(--green);font-size:11px;font-family:var(--font-mono);padding:8px 0;}
+.pain-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.pain-item:last-child{border-bottom:none;}
+.pain-num{font-family:var(--font-mono);font-size:11px;color:var(--accent);flex-shrink:0;margin-top:1px;}
+.pain-text{font-size:13px;color:var(--muted);line-height:1.5;flex:1;}
+.pain-edit{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;padding:3px 8px;cursor:pointer;flex-shrink:0;}
+.pain-edit:hover{border-color:var(--text);color:var(--text);}
+.pain-edit-area{display:none;margin-top:8px;width:100%;}
+.pain-edit-area textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-size:12px;font-family:var(--font-mono);resize:vertical;min-height:60px;outline:none;}
+.pain-edit-area textarea:focus{border-color:var(--accent2);}
+.pain-save{margin-top:4px;background:var(--accent2);color:#fff;border:none;padding:5px 12px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;}
+.assumption-item{font-size:12px;font-family:var(--font-mono);color:var(--muted);padding:6px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start;}
+.assumption-item::before{content:'?';color:var(--accent2);flex-shrink:0;}
+.email-box{background:var(--bg);border:1px solid var(--border);padding:20px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
+.email-subject{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.no-audit{text-align:center;padding:48px;color:var(--muted);}
+.no-audit-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.no-audit-sub{font-size:13px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div id="pwScreen">
+  <div class="pw-logo">
+    <div class="pw-mark"><span>R</span></div>
+    <div class="pw-brand">RATOVA AI</div>
+  </div>
+  <div class="pw-box">
+    <div class="pw-title">FOLLOW-UP EMAIL TOOL — TOOL 3</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
+    <div class="pw-error" id="pwError">Incorrect password</div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="mark"><span>R</span></div>
+      <div class="brand">RATOVA AI</div>
+      <div class="tool-badge">FOLLOW-UP EMAIL</div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div id="noAuditMsg" class="no-audit" style="display:none;">
+      <div class="no-audit-title">No Audit Found</div>
+      <div class="no-audit-sub">Run an audit in Tool 1 first, then come back here to draft your follow-up email.</div>
+    </div>
+
+    <div id="auditContent">
+      <!-- CLIENT INFO -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:'Syne',sans-serif;margin-bottom:4px;">FOLLOW-UP EMAIL DRAFT</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;" id="headerName">--</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="headerMeta">--</div>
+      </div>
+
+      <!-- PAIN POINTS REVIEW -->
+      <div class="section-label">PAIN POINTS IDENTIFIED -- REVIEW & EDIT BEFORE SENDING</div>
+      <div class="card" id="painPointsCard">
+        <div id="painPointsList"></div>
+      </div>
+
+      <!-- ASSUMPTIONS -->
+      <div class="section-label">AI ASSUMPTIONS -- VERIFY THESE ARE CORRECT</div>
+      <div class="card" id="assumptionsCard">
+        <div id="assumptionsList"></div>
+      </div>
+
+      <!-- EMAIL DETAILS -->
+      <div class="section-label">EMAIL DETAILS</div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="input-group">
+            <label>Client First Name</label>
+            <input type="text" id="clientFirst" placeholder="e.g. Marcus"/>
+          </div>
+          <div class="input-group">
+            <label>Report Delivery Date</label>
+            <input type="text" id="deliveryDate" placeholder="e.g. Friday 25th April"/>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Anthropic API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-ant-..."/>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="generateEmail()">Generate Follow-Up Email</button>
+      </div>
+      <div id="emailError" style="margin-top:12px;"></div>
+
+      <!-- EMAIL OUTPUT -->
+      <div id="emailOutput" style="display:none;margin-top:24px;">
+        <div class="section-label">GENERATED EMAIL</div>
+        <div class="card">
+          <div class="email-box" id="emailBox"></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="copyEmail()">Copy Email</button>
+          <button class="btn btn-ghost" onclick="generateEmail()">Regenerate</button>
+        </div>
+        <div id="copyMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = 'Ratova#Launch26';
+var currentAudit = null;
+var editedPainPoints = [];
+var editedAssumptions = [];
+
+function checkPw(){
+  if(document.getElementById('pwInput').value === PASSWORD){
+    sessionStorage.setItem('ratova_auth','1');
+    document.getElementById('pwScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadAudit();
+    var saved = localStorage.getItem('ratova_api_key');
+    if(saved) document.getElementById('apiKey').value = saved;
+    document.getElementById('apiKey').addEventListener('change',function(){
+      localStorage.setItem('ratova_api_key',this.value.trim());
+    });
+  } else {
+    document.getElementById('pwError').style.display='block';
+  }
+}
+
+function loadAudit(){
+  var saved = localStorage.getItem('ratova_current_audit');
+  if(!saved){
+    document.getElementById('noAuditMsg').style.display='block';
+    document.getElementById('auditContent').style.display='none';
+    return;
+  }
+  currentAudit = JSON.parse(saved);
+  document.getElementById('headerName').textContent = currentAudit.clientName;
+  document.getElementById('headerMeta').textContent = currentAudit.industry + ' . ' + (currentAudit.teamSize||'N/A') + ' . ' + currentAudit.date;
+
+  // Load pain points
+  var painPoints = (currentAudit.report && currentAudit.report.painPoints) || [];
+  editedPainPoints = painPoints.slice();
+  renderPainPoints();
+
+  // Load assumptions
+  var assumptions = [];
+  if(currentAudit.report && currentAudit.report.assumptions) assumptions = currentAudit.report.assumptions;
+  else if(currentAudit.report && currentAudit.report.signals && currentAudit.report.signals.assumptions) assumptions = currentAudit.report.signals.assumptions;
+  editedAssumptions = assumptions.slice();
+  renderAssumptions();
+}
+
+function renderPainPoints(){
+  var html = '';
+  editedPainPoints.forEach(function(pain, i){
+    html += '<div class="pain-item">'
+      +'<div class="pain-num">'+String(i+1).padStart(2,'0')+'</div>'
+      +'<div style="flex:1;">'
+        +'<div class="pain-text" id="pain-text-'+i+'">'+pain+'</div>'
+        +'<div class="pain-edit-area" id="pain-edit-'+i+'">'
+          +'<textarea id="pain-ta-'+i+'">'+pain+'</textarea>'
+          +'<button class="pain-save" onclick="savePain('+i+')">Save</button>'
+        +'</div>'
+      +'</div>'
+      +'<button class="pain-edit" onclick="togglePainEdit('+i+')">Edit</button>'
+      +'</div>';
+  });
+  document.getElementById('painPointsList').innerHTML = html;
+}
+
+function renderAssumptions(){
+  var html = '';
+  editedAssumptions.forEach(function(a){
+    html += '<div class="assumption-item">'+a+'</div>';
+  });
+  if(!editedAssumptions.length) html = '<div style="font-size:12px;color:var(--muted);font-family:var(--font-mono);">No assumptions extracted from transcript.</div>';
+  document.getElementById('assumptionsList').innerHTML = html;
+}
+
+function togglePainEdit(i){
+  var area = document.getElementById('pain-edit-'+i);
+  area.style.display = area.style.display==='block'?'none':'block';
+}
+
+function savePain(i){
+  var val = document.getElementById('pain-ta-'+i).value.trim();
+  editedPainPoints[i] = val;
+  document.getElementById('pain-text-'+i).textContent = val;
+  document.getElementById('pain-edit-'+i).style.display='none';
+}
+
+async function generateEmail(){
+  var errEl = document.getElementById('emailError');
+  errEl.innerHTML='';
+  var clientFirst = document.getElementById('clientFirst').value.trim();
+  var deliveryDate = document.getElementById('deliveryDate').value.trim();
+  var apiKey = document.getElementById('apiKey').value.trim();
+
+  if(!apiKey||!apiKey.startsWith('sk-ant')){
+    errEl.innerHTML='<div class="error-box">Please enter a valid Anthropic API key.</div>';return;
+  }
+  if(!clientFirst||!deliveryDate){
+    errEl.innerHTML='<div class="error-box">Please enter the client first name and report delivery date.</div>';return;
+  }
+
+  var btn = document.querySelector('.btn-primary');
+  btn.textContent='...Drafting'; btn.disabled=true;
+
+  try{
+    var painPointsText = editedPainPoints.map(function(p,i){return (i+1)+'. '+p;}).join('\n');
+    var assumptionsText = editedAssumptions.length > 0
+      ? editedAssumptions.map(function(a){return '- '+a;}).join('\n')
+      : 'None noted';
+
+    var promptParts = [
+      'Write a short, warm, professional post-discovery-call follow-up email from Ratova AI.',
+      '',
+      'FROM: Lere Durodola, Founder & CEO, Ratova AI (olalere.durodola@ratovaai.com)',
+      'TO: '+clientFirst+' at '+currentAudit.clientName,
+      'REPORT DELIVERY DATE: '+deliveryDate,
+      '',
+      'PAIN POINTS TO INCLUDE (itemized list in email):',
+      painPointsText,
+      '',
+      'ASSUMPTIONS TO CONFIRM (include a brief note asking client to verify):',
+      assumptionsText,
+      '',
+      'Write the email with these exact sections:',
+      '1. Warm opening - thank them genuinely, one line, not generic',
+      '2. Pain points section - "Based on our conversation, here are the key pain points I noted:" then the numbered list verbatim',
+      '3. Assumptions section - brief note: "To ensure the audit is accurate, here is what I am working with - please correct anything that is off:" then bullet list of assumptions',
+      '4. Report delivery - confirm you will send the full audit report by [date]',
+      '5. Closing - one friendly line',
+      '',
+      'Rules:',
+      '- Natural conversational tone, not corporate',
+      '- Do NOT use "I hope this email finds you well" or "It was a pleasure"',
+      '- Keep the pain points exactly as listed - these are their words',
+      '- Total email should be concise but complete',
+      '',
+      'Return JSON only (no markdown backticks):',
+      '{"subject":"email subject line","body":"full email body - use actual newlines not slash n"}'
+    ];
+
+    var res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:promptParts.join('\n')}]})
+    });
+    var data = await res.json();
+    if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+    if(!data.content) throw new Error('No content returned. Check your API key.');
+    var raw = data.content.map(function(i){return i.text||'';}).join('');
+    var cleaned = raw.replace(/[`]{3}json/g,'').replace(/[`]{3}/g,'').trim();
+    var parsed = JSON.parse(cleaned);
+
+    var box = document.getElementById('emailBox');
+    box.innerHTML = '<div class="email-subject">Subject: '+parsed.subject+'</div>'+parsed.body.replace(/\n/g,'<br>');
+    window._emailText = 'Subject: '+parsed.subject+'\n\n'+parsed.body;
+    document.getElementById('emailOutput').style.display='block';
+  }catch(err){
+    errEl.innerHTML='<div class="error-box">Email generation failed: '+err.message+'</div>';
+  }finally{
+    btn.textContent='Generate Follow-Up Email'; btn.disabled=false;
+  }
+}
+
+function copyEmail(){
+  if(!window._emailText) return;
+  navigator.clipboard.writeText(window._emailText).then(function(){
+    document.getElementById('copyMsg').innerHTML='<div class="save-msg">Copied to clipboard. Paste into Gmail.</div>';
+    setTimeout(function(){document.getElementById('copyMsg').innerHTML='';},3000);
+  });
+}
+// Auto-unlock if authenticated from hub
+if(sessionStorage.getItem('ratova_auth')==='1'){
+  document.getElementById('pwScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  if(typeof loadAudit === 'function') loadAudit();
+  var savedKey = localStorage.getItem('ratova_api_key');
+  if(savedKey && document.getElementById('apiKey')) document.getElementById('apiKey').value = savedKey;
+}
+</script>
+</body>
+</html>
