@@ -3,1509 +3,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ratova AI -- Audit Agent</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Ratova AI â€” Agency Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#080810;--surface:#111118;--surface2:#1a1a26;--border:#222230;
-  --crimson:#e11d48;--blue:#3b82f6;--accent:#e8ff47;--accent2:#47ffd4;
-  --text:#f0f0f0;--muted:#666680;--danger:#ff4747;
-}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:"IBM Plex Mono",monospace;min-height:100vh;overflow-x:hidden;}
-body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(232,255,71,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(232,255,71,0.02) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+:root{
+  --bg:#080810;--surface:#0f0f1a;--surface2:#141425;--border:#1e1e32;
+  --text:#e8e8f0;--muted:#6b6b8a;--accent:#e11d48;--accent2:#3b82f6;
+  --green:#22c55e;--yellow:#eab308;--font-mono:'IBM Plex Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
 
-/* PASSWORD GATE */
-#passwordGate{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;}
-.gate-box{width:340px;text-align:center;}
-.gate-logo{width:52px;height:52px;position:relative;margin:0 auto 24px;}
-.gate-logo .outer{position:absolute;inset:0;border:3px solid var(--crimson);}
-.gate-logo .inner{position:absolute;inset:8px;border:2px solid var(--blue);}
-.gate-logo .r{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Syne",sans-serif;font-size:22px;font-weight:800;color:#fff;}
-.gate-logo .d1{position:absolute;top:-3px;left:-3px;width:14px;height:3px;background:var(--crimson);}
-.gate-logo .d2{position:absolute;bottom:-3px;right:-3px;width:14px;height:3px;background:var(--blue);}
-.gate-title{font-family:"Syne",sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;}
-.gate-sub{font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:0.05em;}
-.gate-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:"IBM Plex Mono",monospace;font-size:14px;padding:12px 16px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px;}
-.gate-input:focus{border-color:var(--crimson);}
-.gate-btn{width:100%;background:var(--crimson);color:#fff;border:none;padding:12px;font-family:"Syne",sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;}
-.gate-btn:hover{background:#be1239;}
-.gate-error{color:var(--danger);font-size:11px;margin-top:8px;}
+/* Grid background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(225,29,72,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;
+}
 
-/* MAIN */
-#mainApp{display:none;}
-.container{max-width:980px;margin:0 auto;padding:36px 24px;position:relative;z-index:1;}
-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:44px;border-bottom:1px solid var(--border);padding-bottom:22px;flex-wrap:wrap;gap:14px;}
-.nav-brand{display:flex;flex-direction:column;}
-.badge{display:inline-block;background:var(--accent);color:#000;font-family:"Syne",sans-serif;font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;padding:3px 9px;margin-bottom:7px;width:fit-content;}
-.nav-title{font-family:"Syne",sans-serif;font-size:clamp(18px,3.5vw,30px);font-weight:800;letter-spacing:-0.02em;}
-.nav-title span{color:var(--accent);}
-.nav-tabs{display:flex;gap:4px;flex-wrap:wrap;}
-.nav-tab{padding:8px 14px;font-family:"Syne",sans-serif;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
-.nav-tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
-.nav-tab:hover:not(.active){border-color:var(--muted);color:var(--text);}
-.count{background:var(--surface2);color:var(--muted);padding:1px 5px;font-size:9px;margin-left:3px;}
-.nav-tab.active .count{background:rgba(0,0,0,0.2);color:#000;}
+/* Glow effects */
+.glow-1{position:fixed;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(225,29,72,0.06) 0%,transparent 70%);pointer-events:none;}
+.glow-2{position:fixed;bottom:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,0.06) 0%,transparent 70%);pointer-events:none;}
 
-/* VIEWS */
-.view{display:none;animation:fadeIn 0.3s ease;}
-.view.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+/* PASSWORD SCREEN */
+#pwScreen{width:100%;max-width:420px;padding:20px;}
+.pw-logo{display:flex;align-items:center;gap:14px;margin-bottom:32px;justify-content:center;}
+.pw-mark{width:52px;height:52px;position:relative;border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pw-mark::before{content:'';position:absolute;inset:6px;border:2px solid var(--accent2);}
+.pw-mark::after{content:'';position:absolute;top:-4px;left:-4px;width:12px;height:3px;background:var(--accent);}
+.pm-dot{position:absolute;bottom:-3px;right:-3px;width:12px;height:3px;background:var(--accent2);}
+.pw-mark span{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);position:relative;z-index:1;}
+.pw-brand-wrap{display:flex;flex-direction:column;gap:2px;}
+.pw-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:5px;color:var(--text);}
+.pw-sub{font-size:10px;letter-spacing:2px;color:var(--muted);font-family:var(--font-mono);}
+.pw-box{background:var(--surface);border:1px solid var(--border);padding:32px;}
+.pw-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:20px;font-family:'Syne',sans-serif;text-align:center;}
+.pw-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:14px 16px;font-family:var(--font-mono);font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:background 0.2s;}
+.pw-btn:hover{background:#be1239;}
+.pw-error{color:var(--accent);font-size:11px;font-family:var(--font-mono);text-align:center;margin-top:10px;display:none;}
+.pw-version{text-align:center;margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--font-mono);}
 
-/* STEPS */
-.steps{display:flex;gap:6px;margin-bottom:32px;flex-wrap:wrap;}
-.step{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);letter-spacing:0.05em;}
-.step.active{color:var(--accent);}
-.step.done{color:var(--accent2);}
-.step-num{width:20px;height:20px;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
-.step-div{width:18px;height:1px;background:var(--border);}
+/* HUB */
+#hub{display:none;width:100%;max-width:860px;padding:20px;}
+.hub-header{text-align:center;margin-bottom:48px;}
+.hub-logo{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:16px;}
+.hub-mark{width:48px;height:48px;position:relative;border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hub-mark::before{content:'';position:absolute;inset:6px;border:2px solid var(--accent2);}
+.hub-mark::after{content:'';position:absolute;top:-3px;left:-3px;width:10px;height:2.5px;background:var(--accent);}
+.hub-dot{position:absolute;bottom:-3px;right:-3px;width:10px;height:2.5px;background:var(--accent2);}
+.hub-mark span{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);position:relative;z-index:1;}
+.hub-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:5px;}
+.hub-tagline{font-size:11px;color:var(--muted);font-family:var(--font-mono);letter-spacing:1.5px;}
 
-/* PANELS */
-.panel{display:none;animation:fadeIn 0.3s ease;}
-.panel.active{display:block;}
+/* WORKFLOW INDICATOR */
+.workflow{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:48px;flex-wrap:wrap;}
+.wf-step{font-size:9px;font-family:var(--font-mono);color:var(--muted);padding:4px 10px;border:1px solid var(--border);white-space:nowrap;}
+.wf-step.active{color:var(--accent2);border-color:var(--accent2);}
+.wf-arrow{font-size:10px;color:var(--border);padding:0 2px;}
 
-/* FORM */
-.input-group{margin-bottom:20px;}
-label{display:block;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
-label span{color:var(--accent);margin-left:3px;}
-input[type="text"],input[type="email"],input[type="password"],textarea,select{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:11px 14px;outline:none;transition:border-color 0.2s;resize:vertical;}
-input:focus,textarea:focus,select:focus{border-color:var(--accent);}
-textarea{min-height:220px;line-height:1.7;}
-select option{background:var(--surface);}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.char-hint{font-size:10px;color:var(--muted);margin-top:5px;}
+/* TOOL CARDS */
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+.tool-card{background:var(--surface);border:1px solid var(--border);padding:28px;cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.15s;}
+.tool-card:hover{transform:translateY(-2px);}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.tool-card:nth-child(1)::before{background:var(--accent);}
+.tool-card:nth-child(2)::before{background:var(--green);}
+.tool-card:nth-child(3)::before{background:var(--accent2);}
+.tool-card:nth-child(4)::before{background:var(--yellow);}
+.tool-card:nth-child(1):hover{border-color:var(--accent);}
+.tool-card:nth-child(2):hover{border-color:var(--green);}
+.tool-card:nth-child(3):hover{border-color:var(--accent2);}
+.tool-card:nth-child(4):hover{border-color:var(--yellow);}
+.tool-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:12px;}
+.tool-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;}
+.tool-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.tool-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tool-tag{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;padding:3px 8px;border:1px solid var(--border);color:var(--muted);}
+.tool-arrow{position:absolute;bottom:20px;right:20px;font-family:var(--font-mono);font-size:16px;color:var(--border);}
+.tool-card:hover .tool-arrow{color:var(--text);}
+.tool-card:nth-child(1) .tool-num{color:var(--accent);}
+.tool-card:nth-child(2) .tool-num{color:var(--green);}
+.tool-card:nth-child(3) .tool-num{color:var(--accent2);}
+.tool-card:nth-child(4) .tool-num{color:var(--yellow);}
 
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;font-family:"Syne",sans-serif;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.2s;}
-.btn-primary{background:var(--accent);color:#000;}
-.btn-primary:hover{background:#d4eb2e;transform:translateY(-1px);}
-.btn-crimson{background:var(--crimson);color:#fff;}
-.btn-crimson:hover{background:#be1239;}
-.btn-blue{background:var(--blue);color:#fff;}
-.btn-blue:hover{background:#2563eb;}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:var(--muted);color:var(--text);}
-.btn-accent2{background:var(--accent2);color:#000;}
-.btn-sm{padding:7px 12px;font-size:9px;}
-.btn-danger{background:var(--danger);color:#fff;}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px;}
+/* CURRENT AUDIT BANNER */
+.audit-banner{background:var(--surface2);border:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.audit-banner-left{display:flex;align-items:center;gap:12px;}
+.audit-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.audit-info{font-size:12px;}
+.audit-client{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
+.audit-meta{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:2px;}
+.audit-clear{font-size:10px;color:var(--muted);font-family:var(--font-mono);cursor:pointer;background:transparent;border:none;text-decoration:underline;}
+.audit-clear:hover{color:var(--accent);}
+.no-audit-banner{background:var(--surface2);border:1px solid var(--border);padding:14px 20px;font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-bottom:16px;text-align:center;}
 
-/* PROCESSING */
-.processing{background:var(--surface);border:1px solid var(--border);padding:32px;text-align:center;margin-bottom:20px;}
-.spinner{width:28px;height:28px;border:2px solid var(--border);border-top:2px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.log-wrap{margin-top:18px;text-align:left;max-height:200px;overflow:hidden;}
-.log-phase{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:6px;}
-.log-line{font-size:11px;color:var(--muted);padding:3px 0;transition:color 0.3s;}
-.log-line.active{color:var(--accent2);}
-.log-line.done{color:var(--muted);}
-.error-box{background:rgba(255,71,71,0.1);border:1px solid var(--danger);color:var(--danger);padding:12px 16px;font-size:11px;margin-top:12px;}
-
-/* REPORT */
-.report-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);}
-.report-meta{display:flex;gap:16px;font-size:10px;color:var(--muted);flex-wrap:wrap;}
-.report-body h2{font-family:"Syne",sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.report-body p{font-size:12px;line-height:1.8;color:#ccc;margin-bottom:10px;}
-.signals-box{background:var(--surface);border-left:3px solid var(--accent);padding:14px 18px;margin-bottom:20px;font-size:11px;line-height:1.9;color:#aaa;}
-.signals-title{font-family:"Syne",sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
-.roi-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:10px 0;}
-.roi-item{background:var(--surface);padding:14px;text-align:center;}
-.roi-item label{font-size:9px;color:var(--muted);display:block;margin-bottom:6px;}
-.roi-item .value{font-family:"Syne",sans-serif;font-size:15px;font-weight:700;color:var(--accent);}
-.matrix{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin:10px 0;}
-.matrix-cell{background:var(--surface);padding:12px;}
-.matrix-cell.highlight{background:rgba(232,255,71,0.05);}
-.cell-label{font-family:"Syne",sans-serif;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;}
-.items{font-size:10px;color:#aaa;line-height:1.8;}
-.opp-card{background:var(--surface);border:1px solid var(--border);padding:18px;margin-bottom:12px;}
-.opp-card.high{border-left:3px solid var(--accent);}
-.opp-card.medium{border-left:3px solid var(--blue);}
-.opp-card.low{border-left:3px solid var(--muted);}
-.opp-title{font-family:"Syne",sans-serif;font-size:13px;font-weight:700;margin-bottom:8px;}
-.opp-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-.tag{font-size:9px;padding:2px 8px;border:1px solid var(--border);color:var(--muted);}
-.tag-high{border-color:var(--accent);color:var(--accent);}
-.tag-medium{border-color:var(--blue);color:var(--blue);}
-.tag-low{border-color:var(--muted);color:var(--muted);}
-.opp-text{font-size:11px;line-height:1.8;color:#bbb;}
-.price-row{display:flex;gap:12px;margin-top:12px;}
-.price-box{flex:1;padding:10px;text-align:center;}
-.price-box.proj{background:rgba(232,255,71,0.05);border:1px solid rgba(232,255,71,0.2);}
-.price-box.ret{background:rgba(71,255,212,0.05);border:1px solid rgba(71,255,212,0.2);}
-.price-label{font-size:9px;color:var(--muted);margin-bottom:4px;}
-.price-val{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;}
-.price-val.proj{color:var(--accent);}
-.price-val.ret{color:var(--accent2);}
-.pricing-summary{background:var(--surface2);border:1px solid var(--border);padding:18px;margin:10px 0;}
-.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;}
-.ps-item label{font-size:9px;color:var(--muted);display:block;margin-bottom:4px;}
-.ps-val{font-family:"Syne",sans-serif;font-size:16px;font-weight:700;}
-.ps-rec{font-size:11px;color:var(--accent2);padding-top:10px;border-top:1px solid var(--border);}
-.roadmap-phase{display:flex;gap:14px;margin-bottom:12px;padding:14px;background:var(--surface);border:1px solid var(--border);}
-.phase-num{font-family:"Syne",sans-serif;font-size:20px;font-weight:800;color:var(--border);flex-shrink:0;width:32px;}
-.phase-title{font-family:"Syne",sans-serif;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;}
-.phase-items{font-size:11px;color:#aaa;line-height:1.9;}
-.save-msg{color:var(--accent2);font-size:11px;margin-top:8px;}
-
-/* PROPOSAL */
-.proposal-section{background:var(--surface);border:1px solid var(--border);padding:22px;margin-bottom:14px;}
-.proposal-section h3{font-family:"Syne",sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.proposal-block{font-size:12px;line-height:1.8;color:#ccc;}
-.scope-item{display:flex;gap:10px;font-size:11px;color:#ccc;padding:5px 0;border-bottom:1px solid var(--border);}
-.scope-item span{color:var(--accent);flex-shrink:0;}
-.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
-.price-card{background:var(--surface2);border:1px solid var(--border);padding:18px;}
-.price-card.rec{border-color:var(--accent);}
-.price-card.ret-card{border-color:var(--accent2);}
-.pc-badge{display:inline-block;font-family:"Syne",sans-serif;font-size:9px;font-weight:700;padding:2px 8px;margin-bottom:8px;}
-.pc-badge.a{background:var(--accent);color:#000;}
-.pc-badge.b{background:var(--accent2);color:#000;}
-.pc-label{font-family:"Syne",sans-serif;font-size:12px;font-weight:700;margin-bottom:4px;}
-.pc-price{font-family:"Syne",sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;}
-.pc-price.proj{color:var(--accent);}
-.pc-price.ret{color:var(--accent2);}
-.pc-desc{font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.7;}
-.pc-inc{font-size:10px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);}
-.esign-box{background:var(--surface2);border:1px solid var(--accent);padding:22px;margin-top:16px;text-align:center;}
-.esign-title{font-family:"Syne",sans-serif;font-size:15px;font-weight:800;margin-bottom:8px;}
-.esign-sub{font-size:11px;color:#aaa;margin-bottom:16px;line-height:1.7;}
-.esign-input{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:10px;outline:none;margin-bottom:14px;text-align:center;}
-.esign-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.esign-btn{padding:10px 18px;font-family:"Syne",sans-serif;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;border:none;cursor:pointer;}
-.esign-btn.proj{background:var(--accent);color:#000;}
-.esign-btn.ret{background:var(--accent2);color:#000;}
-.esign-ok{display:none;background:rgba(71,255,212,0.1);border:1px solid var(--accent2);padding:16px;text-align:center;}
-
-/* INTERNAL SECTIONS (follow-up, review, impl guide) */
-.internal-section{margin-top:32px;border-top:2px solid var(--border);padding-top:28px;}
-.internal-header .badge{margin-bottom:8px;}
-.internal-title{font-family:"Syne",sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;}
-.internal-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
-.internal-output{background:var(--surface);border:1px solid var(--border);padding:20px;font-size:12px;line-height:1.85;color:#ccc;margin-top:16px;}
-.internal-output h4{font-family:"Syne",sans-serif;font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:0.08em;text-transform:uppercase;margin:16px 0 8px;}
-.internal-output h4:first-child{margin-top:0;}
-.internal-output pre{background:var(--surface2);border:1px solid var(--border);padding:12px;font-size:10px;overflow-x:auto;margin:8px 0;color:var(--accent2);}
-.internal-output strong{color:var(--text);}
-.internal-output .issue{background:rgba(255,71,71,0.07);border-left:3px solid var(--danger);padding:10px 14px;margin:8px 0;}
-.internal-output .good{background:rgba(71,255,212,0.07);border-left:3px solid var(--accent2);padding:10px 14px;margin:8px 0;}
-.verdict-ready{color:var(--accent2);font-family:"Syne",sans-serif;font-size:14px;font-weight:800;}
-.verdict-minor{color:var(--accent);font-family:"Syne",sans-serif;font-size:14px;font-weight:800;}
-.verdict-major{color:var(--danger);font-family:"Syne",sans-serif;font-size:14px;font-weight:800;}
-
-/* LIBRARY */
-.library-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
-.library-title{font-family:"Syne",sans-serif;font-size:20px;font-weight:800;}
-.audit-card{background:var(--surface);border:1px solid var(--border);padding:18px;margin-bottom:10px;cursor:pointer;transition:border-color 0.2s;}
-.audit-card:hover{border-color:var(--muted);}
-.audit-card-title{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;margin-bottom:6px;}
-.audit-card-meta{font-size:10px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
-.audit-card-actions{display:flex;gap:8px;flex-wrap:wrap;}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;overflow-y:auto;padding:24px;}
-.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center;}
-.modal{background:var(--bg);border:1px solid var(--border);max-width:860px;width:100%;margin:auto;}
-.modal-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
-.modal-nav-title{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;}
-.modal-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;}
-.modal-body{padding:24px;max-height:80vh;overflow-y:auto;}
+/* FOOTER */
+.hub-footer{text-align:center;font-size:10px;color:var(--muted);font-family:var(--font-mono);padding-top:16px;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
 
-<div id="passwordGate">
-  <div class="gate-box">
-    <div class="gate-logo">
-      <div class="outer"></div>
-      <div class="inner"></div>
-      <div class="r">R</div>
-      <div class="d1"></div>
-      <div class="d2"></div>
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+
+<!-- PASSWORD -->
+<div id="pwScreen">
+  <div class="pw-logo">
+    <div class="pw-mark">
+      <div class="pm-dot"></div>
+      <span>R</span>
     </div>
-    <div class="gate-title">RATOVA <span style="color:var(--crimson)">AI</span></div>
-    <div class="gate-sub">AUDIT AGENT -- INTERNAL ACCESS ONLY</div>
-    <input type="password" class="gate-input" id="gateInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()"/>
-    <button class="gate-btn" onclick="checkPassword()">ENTER</button>
-    <div class="gate-error" id="gateError"></div>
+    <div class="pw-brand-wrap">
+      <div class="pw-brand">RATOVA AI</div>
+      <div class="pw-sub">AGENCY TOOLS</div>
+    </div>
   </div>
+  <div class="pw-box">
+    <div class="pw-title">ENTER PASSWORD TO ACCESS</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
+    <div class="pw-error" id="pwError">Incorrect password. Try again.</div>
+  </div>
+  <div class="pw-version">Ratova AI Agency Suite v2.0</div>
 </div>
 
-<div id="mainApp">
-<div class="container">
-
-<nav>
-  <div class="nav-brand">
-    <div class="badge">AI Agency Tool</div>
-    <div class="nav-title">Audit <span>Agent</span></div>
-  </div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" id="tabNew" onclick="showView('audit',this)">+ New Audit</button>
-    <button class="nav-tab" id="tabLib" onclick="showView('library',this)">Saved <span class="count" id="libCount">0</span></button>
-  </div>
-</nav>
-
-<!-- ===== AUDIT VIEW ===== -->
-<div class="view active" id="view-audit">
-
-  <!-- Steps -->
-  <div class="steps">
-    <div class="step active" id="step1"><div class="step-num">1</div> Input</div>
-    <div class="step-div"></div>
-    <div class="step" id="step2"><div class="step-num">2</div> Analyse</div>
-    <div class="step-div"></div>
-    <div class="step" id="step3"><div class="step-num">3</div> Report</div>
-    <div class="step-div"></div>
-    <div class="step" id="step4"><div class="step-num">4</div> Proposal</div>
+<!-- HUB -->
+<div id="hub">
+  <div class="hub-header">
+    <div class="hub-logo">
+      <div class="hub-mark">
+        <div class="hub-dot"></div>
+        <span>R</span>
+      </div>
+      <div class="hub-brand">RATOVA AI</div>
+    </div>
+    <div class="hub-tagline">INTELLIGENCE, ENGINEERED.</div>
   </div>
 
-  <!-- Panel 1: Input -->
-  <div class="panel active" id="panel1">
-    <div class="input-group">
-      <label>Anthropic API Key <span>*</span></label>
-      <input type="password" id="apiKey" placeholder="sk-ant-..." style="letter-spacing:1px;"/>
-      <div class="char-hint">Saved in this browser automatically. <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent2);">Get your key -&gt;</a></div>
-    </div>
-    <div class="input-group">
-      <label>Client Business Name <span>*</span></label>
-      <input type="text" id="clientName" placeholder="e.g. Webb and Associates Legal"/>
-    </div>
-    <div class="row">
-      <div class="input-group">
-        <label>Industry <span>*</span></label>
-        <select id="industry">
-          <option value="">Select industry...</option>
-          <option>Marketing Agency</option><option>E-commerce</option><option>Legal Services</option>
-          <option>Healthcare</option><option>Real Estate</option><option>Financial Services</option>
-          <option>Recruitment</option><option>Consulting</option><option>SaaS / Tech</option>
-          <option>Construction</option><option>Education</option><option>Other</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label>Team Size</label>
-        <select id="teamSize">
-          <option value="">Select...</option>
-          <option>1-5</option><option>6-20</option><option>21-50</option><option>51-200</option><option>200+</option>
-        </select>
-      </div>
-    </div>
-    <div class="row">
-      <div class="input-group">
-        <label>Your Agency Name</label>
-        <input type="text" id="agencyName" value="Ratova AI" placeholder="Ratova AI"/>
-      </div>
-      <div class="input-group">
-        <label>Your Contact Email</label>
-        <input type="email" id="agencyEmail" value="hello@ratovaai.com" placeholder="hello@ratovaai.com"/>
-      </div>
-    </div>
-    <div class="input-group">
-      <label>Discovery Call Transcript <span>*</span></label>
-      <textarea id="transcript" placeholder="Paste your full discovery call transcript here...&#10;&#10;The more detail the better. Tool mentions, time estimates, frustrations, workflows -- include everything."></textarea>
-      <div class="char-hint" id="charHint">0 characters -- aim for 500+ for best results</div>
-    </div>
-    <div id="inputError"></div>
-    <div class="actions">
-      <button class="btn btn-primary" onclick="startAnalysis()">Run Full Analysis</button>
-    </div>
+  <!-- WORKFLOW -->
+  <div class="workflow">
+    <div class="wf-step">Discovery Call</div>
+    <div class="wf-arrow">-></div>
+    <div class="wf-step active">Tool 1: Audit</div>
+    <div class="wf-arrow">-></div>
+    <div class="wf-step">Tool 3: Follow-Up</div>
+    <div class="wf-arrow">-></div>
+    <div class="wf-step">Tool 2: Proposal</div>
+    <div class="wf-arrow">-></div>
+    <div class="wf-step">Client Accepts</div>
+    <div class="wf-arrow">-></div>
+    <div class="wf-step">Tool 4: Impl Guide</div>
   </div>
 
-  <!-- Panel 2: Processing -->
-  <div class="panel" id="panel2">
-    <div class="processing">
-      <div class="spinner" id="spinner"></div>
-      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:5px;" id="procTitle">Running Analysis</div>
-      <div style="font-size:11px;color:var(--muted)" id="procSub">Multi-stage reasoning in progress...</div>
-      <div class="log-wrap" id="procLog"></div>
+  <!-- CURRENT AUDIT STATUS -->
+  <div id="auditBanner"></div>
+
+  <!-- TOOLS GRID -->
+  <div class="tools-grid">
+
+    <div class="tool-card" onclick="openTool('tool1-audit.html')">
+      <div class="tool-num">TOOL 01</div>
+      <div class="tool-name">Audit Agent</div>
+      <div class="tool-desc">Paste your discovery call transcript. Extract signals, generate full audit report, review AI-identified solutions and choose procure vs build for each.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Transcript</span>
+        <span class="tool-tag">Report</span>
+        <span class="tool-tag">Solutions</span>
+      </div>
+      <div class="tool-arrow">-></div>
     </div>
-    <div id="procError"></div>
+
+    <div class="tool-card" onclick="openTool('tool2-proposal.html')">
+      <div class="tool-num">TOOL 02</div>
+      <div class="tool-name">Proposal Generator</div>
+      <div class="tool-desc">Generate a client-ready proposal based on your audit and selected solutions. Includes proposal review to flag issues before sending. Download as PDF.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Proposal</span>
+        <span class="tool-tag">Review</span>
+        <span class="tool-tag">PDF</span>
+      </div>
+      <div class="tool-arrow">-></div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('tool3-followup.html')">
+      <div class="tool-num">TOOL 03</div>
+      <div class="tool-name">Follow-Up Email</div>
+      <div class="tool-desc">Review and edit the identified pain points and AI assumptions. Generate a professional follow-up email with itemized pain points to send within 2 hours of the call.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Pain Points</span>
+        <span class="tool-tag">Assumptions</span>
+        <span class="tool-tag">Email</span>
+      </div>
+      <div class="tool-arrow">-></div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('tool4-impl.html')">
+      <div class="tool-num">TOOL 04</div>
+      <div class="tool-name">Implementation Guide</div>
+      <div class="tool-desc">Internal delivery guide. For each solution: Path A (build in-house with steps and costs at $150/hr) and Path B (2-3 tool comparisons with pricing, pros/cons, integration compatibility). HIPAA-aware for healthcare.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Internal Only</span>
+        <span class="tool-tag">Build vs Procure</span>
+        <span class="tool-tag">Costs</span>
+        <span class="tool-tag">HIPAA</span>
+      </div>
+      <div class="tool-arrow">-></div>
+    </div>
+
   </div>
 
-  <!-- Panel 3: Report -->
-  <div class="panel" id="panel3">
-    <div class="report-header">
-      <div>
-        <div class="badge">AI Opportunity Audit</div>
-        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-top:6px;" id="reportTitle">--</div>
-      </div>
-      <div class="report-meta" id="reportMeta"></div>
-    </div>
-    <div class="report-body" id="reportBody"></div>
-    <div class="actions">
-      <button class="btn btn-primary" onclick="goToProposal()">Generate Proposal</button>
-      <button class="btn btn-crimson" onclick="saveAudit()">Save Audit</button>
-      <button class="btn btn-blue" onclick="downloadAuditPDF()">Download PDF</button>
-      <button class="btn btn-ghost" onclick="copyReport()">Copy Report</button>
-      <button class="btn btn-ghost" onclick="resetTool()">New Audit</button>
-    </div>
-    <div id="saveMsg"></div>
-  </div>
-
-  <!-- Panel 4: Proposal + Internal Sections -->
-  <div class="panel" id="panel4">
-    <div id="proposalContent"></div>
-    <div class="actions">
-      <button class="btn btn-crimson" onclick="saveAudit()">Save Audit + Proposal</button>
-      <button class="btn btn-blue" onclick="downloadProposalPDF()">Download Proposal PDF</button>
-      <button class="btn btn-ghost" onclick="copyProposal()">Copy Proposal</button>
-      <button class="btn btn-ghost" onclick="setStep(3)">Back to Report</button>
-      <button class="btn btn-ghost" onclick="resetTool()">New Audit</button>
-    </div>
-    <div id="proposalSaveMsg"></div>
-
-    <!-- FOLLOW-UP EMAIL (internal) -->
-    <div class="internal-section">
-      <div class="internal-header">
-        <div class="badge" style="background:var(--accent2);color:#000;">Post-Call Email</div>
-        <div class="internal-title">Follow-Up Email Draft</div>
-        <div class="internal-sub">Send within 2 hours of the discovery call. Confirms pain points and sets the report delivery date.</div>
-      </div>
-      <div class="row">
-        <div class="input-group">
-          <label>Client first name</label>
-          <input type="text" id="clientFirstName" placeholder="e.g. Marcus"/>
-        </div>
-        <div class="input-group">
-          <label>Report delivery date</label>
-          <input type="text" id="reportDeliveryDate" placeholder="e.g. Friday 25th April"/>
-        </div>
-      </div>
-      <button class="btn btn-accent2" onclick="generateFollowUp()">Generate Follow-Up Email</button>
-      <div id="followupOutput" style="display:none;">
-        <div class="internal-output" id="followupBox"></div>
-        <div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="copyFollowUp()">Copy Email</button>
-          <button class="btn btn-ghost btn-sm" onclick="generateFollowUp()">Regenerate</button>
-        </div>
-        <div id="followupCopyMsg"></div>
-      </div>
-      <div id="followupError"></div>
-    </div>
-
-    <!-- PROPOSAL REVIEW (internal) -->
-    <div class="internal-section">
-      <div class="internal-header">
-        <div class="badge" style="background:var(--danger);color:#fff;">Quality Check</div>
-        <div class="internal-title">Proposal Review</div>
-        <div class="internal-sub">Checks for false claims, weak copy, missing specifics, and improvements before you send to the client.</div>
-      </div>
-      <button class="btn btn-crimson" onclick="reviewProposal()">Review Proposal Before Sending</button>
-      <div id="reviewOutput" style="display:none;">
-        <div class="internal-output" id="reviewBox"></div>
-        <div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="copyReview()">Copy Review</button>
-          <button class="btn btn-ghost btn-sm" onclick="reviewProposal()">Re-run Review</button>
-        </div>
-        <div id="reviewCopyMsg"></div>
-      </div>
-      <div id="reviewError"></div>
-    </div>
-
-    <!-- IMPLEMENTATION GUIDE (internal, never in PDF) -->
-    <div class="internal-section">
-      <div class="internal-header">
-        <div class="badge" style="background:var(--blue);color:#fff;">Internal Only</div>
-        <div class="internal-title">Implementation Guide</div>
-        <div class="internal-sub">How to actually build and deliver what is in the proposal. Uses Make.com, Python, and Anthropic/OpenAI API. Never shown to clients or exported to PDF.</div>
-      </div>
-      <button class="btn btn-blue" onclick="generateImplGuide()">Generate Implementation Guide</button>
-      <div id="implOutput" style="display:none;">
-        <div class="internal-output" id="implBox"></div>
-        <div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="copyImpl()">Copy Guide</button>
-          <button class="btn btn-ghost btn-sm" onclick="generateImplGuide()">Regenerate</button>
-        </div>
-        <div id="implCopyMsg"></div>
-      </div>
-      <div id="implError"></div>
-    </div>
-
-  </div><!-- end panel4 -->
-</div><!-- end view-audit -->
-
-<!-- ===== LIBRARY VIEW ===== -->
-<div class="view" id="view-library">
-  <div class="library-header">
-    <div class="library-title">Saved Audits</div>
-    <button class="btn btn-danger btn-sm" id="clearAllBtn" style="display:none" onclick="clearAll()">Clear All</button>
-  </div>
-  <div id="libraryList"></div>
-</div>
-
-<!-- ===== MODAL ===== -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-nav">
-      <div class="modal-nav-title" id="modalTitle">Audit Report</div>
-      <button class="modal-close" onclick="closeModal()">x</button>
-    </div>
-    <div class="modal-body">
-      <div id="modalReportWrap"></div>
-      <div id="modalProposalWrap" style="margin-top:24px;display:none;"></div>
-      <div class="actions" style="margin-top:16px;">
-        <button class="btn btn-blue btn-sm" onclick="downloadModalAuditPDF()">Download Audit PDF</button>
-        <button class="btn btn-blue btn-sm" id="modalProposalPDFBtn" style="display:none" onclick="downloadModalProposalPDF()">Download Proposal PDF</button>
-        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
-      </div>
-    </div>
+  <div class="hub-footer">
+    Ratova AI Agency Suite &nbsp;.&nbsp; Internal use only &nbsp;.&nbsp; hello@ratovaai.com &nbsp;.&nbsp; ratovaai.com
   </div>
 </div>
-
-</div><!-- end container -->
-</div><!-- end mainApp -->
 
 <script>
-// ============================================================
-// PASSWORD GATE
-// ============================================================
-var AGENT_PASSWORD = 'Ratova#Launch26';
+const PASSWORD = 'Ratova#Launch26';
 
-function checkPassword(){
-  var val = document.getElementById('gateInput').value;
-  if(val === AGENT_PASSWORD){
+function checkPw(){
+  var val = document.getElementById('pwInput').value;
+  if(val === PASSWORD){
+    document.getElementById('pwScreen').style.display='none';
+    document.getElementById('hub').style.display='block';
+    // Store auth in sessionStorage so tools don't need password again in same session
     sessionStorage.setItem('ratova_auth','1');
-    document.getElementById('passwordGate').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    initApp();
+    loadAuditBanner();
   } else {
-    document.getElementById('gateError').textContent = 'Incorrect password. Try again.';
-    document.getElementById('gateInput').value = '';
-    document.getElementById('gateInput').focus();
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').style.borderColor='var(--accent)';
   }
 }
 
-document.getElementById('gateInput').addEventListener('keydown', function(e){
-  if(e.key === 'Enter') checkPassword();
-});
-
-// Auto-login if already authenticated in session
-if(sessionStorage.getItem('ratova_auth') === '1'){
-  document.getElementById('passwordGate').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-}
-
-// ============================================================
-// STATE
-// ============================================================
-var currentReport = null;
-var currentProposal = null;
-var currentClientName = '';
-var currentIndustry = '';
-var currentTeamSize = '';
-var currentAgencyName = '';
-var currentAgencyEmail = '';
-var reportText = '';
-var proposalText = '';
-var modalAuditId = null;
-
-// ============================================================
-// INIT
-// ============================================================
-function initApp(){
-  var savedKey = localStorage.getItem('ratova_api_key');
-  var keyEl = document.getElementById('apiKey');
-  if(keyEl && savedKey) keyEl.value = savedKey;
-  if(keyEl){
-    keyEl.addEventListener('change', function(){
-      localStorage.setItem('ratova_api_key', this.value.trim());
-    });
-  }
-  updateLibCount();
-  document.getElementById('transcript').addEventListener('input', updateCharHint);
-}
-
-if(sessionStorage.getItem('ratova_auth') === '1') initApp();
-
-function updateCharHint(){
-  var len = document.getElementById('transcript').value.length;
-  var h = document.getElementById('charHint');
-  h.textContent = len.toLocaleString() + ' characters' + (len < 500 ? ' -- aim for 500+ for best results' : ' [OK]');
-  h.style.color = len >= 500 ? 'var(--accent2)' : 'var(--muted)';
-}
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function showView(v, btn){
-  document.querySelectorAll('.view').forEach(function(el){ el.classList.remove('active'); });
-  document.querySelectorAll('.nav-tab').forEach(function(el){ el.classList.remove('active'); });
-  document.getElementById('view-' + v).classList.add('active');
-  if(btn) btn.classList.add('active');
-  if(v === 'library') renderLibrary();
-}
-
-function setStep(n){
-  for(var i = 1; i <= 4; i++){
-    var s = document.getElementById('step' + i);
-    var p = document.getElementById('panel' + i);
-    if(s) s.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
-    if(p) p.className = 'panel' + (i === n ? ' active' : '');
+function loadAuditBanner(){
+  var saved = localStorage.getItem('ratova_current_audit');
+  var banner = document.getElementById('auditBanner');
+  if(saved){
+    var audit = JSON.parse(saved);
+    var solutions = (audit.solutions||[]).filter(function(s){return s.selected;});
+    banner.innerHTML = '<div class="audit-banner">'
+      +'<div class="audit-banner-left">'
+        +'<div class="audit-dot"></div>'
+        +'<div class="audit-info">'
+          +'<div class="audit-client">'+audit.clientName+'</div>'
+          +'<div class="audit-meta">'+audit.industry+' &nbsp;.&nbsp; '+audit.date+' &nbsp;.&nbsp; '+solutions.length+' solutions selected</div>'
+        +'</div>'
+      +'</div>'
+      +'<button class="audit-clear" onclick="clearAudit()">Clear audit</button>'
+      +'</div>';
+  } else {
+    banner.innerHTML = '<div class="no-audit-banner">No audit loaded &nbsp;.&nbsp; Start with Tool 1 to run your first audit</div>';
   }
 }
 
-function resetTool(){
-  currentReport = null; currentProposal = null;
-  currentClientName = ''; currentIndustry = ''; currentTeamSize = '';
-  document.getElementById('procLog').innerHTML = '';
-  document.getElementById('procError').innerHTML = '';
-  document.getElementById('followupOutput').style.display = 'none';
-  document.getElementById('reviewOutput').style.display = 'none';
-  document.getElementById('implOutput').style.display = 'none';
-  document.getElementById('saveMsg').innerHTML = '';
-  document.getElementById('proposalSaveMsg').innerHTML = '';
-  setStep(1);
-  showView('audit', document.getElementById('tabNew'));
-}
-
-// ============================================================
-// LOGS
-// ============================================================
-var LOGS1 = [
-  'Reading transcript structure...',
-  'Identifying repetition signals...',
-  'Mapping tool stack and integrations...',
-  'Detecting workflow bottlenecks...',
-  'Flagging manual data transfers...',
-  'Extracting time and cost indicators...',
-  'Compiling raw signal findings...'
-];
-var LOGS2 = [
-  'Scoring opportunity impact...',
-  'Calibrating effort estimates...',
-  'Building opportunity matrix...',
-  'Generating ROI projections...',
-  'Calculating USD pricing...',
-  'Structuring implementation roadmap...',
-  'Compiling audit report...'
-];
-var LOGS3 = [
-  'Reading audit findings...',
-  'Framing client value proposition...',
-  'Structuring project option...',
-  'Structuring retainer option...',
-  'Writing deliverables and timeline...',
-  'Finalising proposal...'
-];
-
-function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
-
-async function runLogs(logs, phase){
-  var log = document.getElementById('procLog');
-  var ph = document.createElement('div');
-  ph.className = 'log-phase';
-  ph.textContent = phase;
-  log.appendChild(ph);
-  for(var i = 0; i < logs.length; i++){
-    await sleep(300 + Math.random()*200);
-    var line = document.createElement('div');
-    line.className = 'log-line active';
-    line.textContent = '-> ' + logs[i];
-    log.appendChild(line);
-    var prev = Array.from(log.querySelectorAll('.log-line.active'));
-    if(prev.length > 1) prev[0].className = 'log-line done';
-    await sleep(100);
+function clearAudit(){
+  if(confirm('Clear the current audit from memory?')){
+    localStorage.removeItem('ratova_current_audit');
+    loadAuditBanner();
   }
 }
 
-// ============================================================
-// API CALL HELPER
-// ============================================================
-function apiHeaders(){
-  return {
-    'Content-Type': 'application/json',
-    'x-api-key': document.getElementById('apiKey').value.trim(),
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true'
-  };
+function openTool(tool){
+  window.location.href = tool;
 }
 
-async function callClaude(prompt, maxTokens){
-  var res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: apiHeaders(),
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      messages: [{role: 'user', content: prompt}]
-    })
-  });
-  var data = await res.json();
-  if(data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  if(!data.content) throw new Error('No content returned. Check your API key.');
-  var raw = data.content.map(function(i){ return i.text || ''; }).join('');
-  // Strip markdown code fences
-  var c=raw.trim();
-  if(c.slice(0,7)==='\x60\x60\x60json')c=c.slice(7);
-  else if(c.slice(0,3)==='\x60\x60\x60')c=c.slice(3);
-  if(c.slice(-3)==='\x60\x60\x60')c=c.slice(0,-3);
-  return c.trim();
+// Auto-unlock if already authenticated in this session
+if(sessionStorage.getItem('ratova_auth')==='1'){
+  document.getElementById('pwScreen').style.display='none';
+  document.getElementById('hub').style.display='block';
+  loadAuditBanner();
 }
-
-// ============================================================
-// ANALYSIS
-// ============================================================
-async function startAnalysis(){
-  currentClientName = document.getElementById('clientName').value.trim();
-  currentIndustry = document.getElementById('industry').value;
-  currentTeamSize = document.getElementById('teamSize').value;
-  currentAgencyName = document.getElementById('agencyName').value.trim() || 'Ratova AI';
-  currentAgencyEmail = document.getElementById('agencyEmail').value.trim() || 'hello@ratovaai.com';
-  var transcript = document.getElementById('transcript').value.trim();
-  var apiKey = document.getElementById('apiKey').value.trim();
-  var errEl = document.getElementById('inputError');
-  errEl.innerHTML = '';
-
-  if(!apiKey || apiKey.indexOf('sk-ant') !== 0){
-    errEl.innerHTML = '<div class="error-box">Please enter a valid Anthropic API key (starts with sk-ant-).</div>';
-    return;
-  }
-  if(!currentClientName || !currentIndustry || !transcript){
-    errEl.innerHTML = '<div class="error-box">Please fill in Client Name, Industry, and Transcript.</div>';
-    return;
-  }
-
-  setStep(2);
-  document.getElementById('procTitle').textContent = 'Stage 1 of 2 -- Extracting Signals';
-  document.getElementById('procSub').textContent = 'Reading your transcript and identifying AI opportunities...';
-
-  var signals = await callStage1(transcript);
-  if(!signals) return;
-
-  document.getElementById('procTitle').textContent = 'Stage 2 of 2 -- Building Report';
-  document.getElementById('procSub').textContent = 'Generating full audit report from findings...';
-
-  await callStage2(signals, currentClientName, currentIndustry, currentTeamSize);
-}
-
-async function callStage1(transcript){
-  await runLogs(LOGS1, 'Phase 1 -- Signal Extraction');
-  var prompt = 'You are an expert AI consultant. Read this discovery call transcript and extract every signal relevant to AI automation opportunities.\n\n'
-    + 'TRANSCRIPT:\n' + transcript + '\n\n'
-    + 'Return ONLY a JSON object (no markdown, no explanation) with these exact fields:\n'
-    + '{\n'
-    + '  "businessContext": "2 sentence summary of what the business does and its scale",\n'
-    + '  "signals": [{"type":"repetition|manual_transfer|bottleneck|time_drain|consistency|scaling","description":"specific observation","quote":"closest phrase from transcript","area":"Communication|Operations|Content|Data","estimatedTimePerWeek":"e.g. 3-5 hours or unknown"}],\n'
-    + '  "toolStack": ["list of tools mentioned"],\n'
-    + '  "painPoints": ["direct pain points expressed by the client"],\n'
-    + '  "goals": ["business goals mentioned"],\n'
-    + '  "budget": "any budget signals or not discussed",\n'
-    + '  "decisionMaker": "yes|unclear|no"\n'
-    + '}';
-  try{
-    var raw = await callClaude(prompt, 2000);
-    return JSON.parse(raw);
-  }catch(err){
-    document.getElementById('procError').innerHTML = '<div class="error-box">Stage 1 error: ' + err.message + '</div>';
-    document.getElementById('spinner').style.display = 'none';
-    return null;
-  }
-}
-
-async function callStage2(signals, clientName, industry, teamSize){
-  await runLogs(LOGS2, 'Phase 2 -- Report Generation');
-  var prompt = 'You are an expert AI agency consultant. Based on the extracted signals below, produce a full AI Opportunity Audit Report. All prices in USD.\n\n'
-    + 'CLIENT: ' + clientName + '\n'
-    + 'INDUSTRY: ' + industry + '\n'
-    + 'TEAM SIZE: ' + (teamSize || 'Unknown') + '\n\n'
-    + 'EXTRACTED SIGNALS:\n' + JSON.stringify(signals, null, 2) + '\n\n'
-    + 'Return ONLY a JSON object with these exact fields:\n'
-    + '{\n'
-    + '  "keySignals": ["top 4-6 most important signals as bullet strings"],\n'
-    + '  "executiveSummary": "3-4 sentence overview",\n'
-    + '  "currentState": "2-3 sentences on how they operate today",\n'
-    + '  "roi": {"timeSavedPerWeek":"e.g. 12-18 hrs/week","estimatedAnnualValue":"e.g. $28,000","implementationCost":"e.g. $4,500-$7,000","roiMultiple":"e.g. 4-6x"},\n'
-    + '  "matrix": {"quickWins":["item1","item2"],"strategicBets":["item1"],"fillIns":["item1"],"deprioritize":["item1"]},\n'
-    + '  "opportunities": [{"title":"string","impact":"High|Medium|Low","effort":"Low|Medium|High","category":"Communication|Operations|Content|Data","currentState":"string","solution":"string","outcome":"string","pricing":{"projectFee":"$X,XXX","retainerFee":"$X,XXX/mo","pricingNotes":"optional"}}],\n'
-    + '  "pricingSummary": {"totalProjectMin":"$X,XXX","totalProjectMax":"$XX,XXX","totalRetainerMin":"$X,XXX","totalRetainerMax":"$X,XXX","recommendation":"string"},\n'
-    + '  "roadmap": [{"phase":"Phase 1","focus":"string","items":["item1","item2","item3"]},{"phase":"Phase 2","focus":"string","items":["item1","item2","item3"]},{"phase":"Phase 3","focus":"string","items":["item1","item2"]}],\n'
-    + '  "nextSteps": "2-3 sentences on recommended next actions",\n'
-    + '  "painPoints": ["pain point 1","pain point 2","pain point 3"]\n'
-    + '}';
-  try{
-    var raw = await callClaude(prompt, 4000);
-    currentReport = JSON.parse(raw);
-    renderReport(currentReport, currentClientName, currentIndustry, currentTeamSize);
-    setStep(3);
-  }catch(err){
-    document.getElementById('procError').innerHTML = '<div class="error-box">Stage 2 error: ' + err.message + '. The report may be too large -- please try again.</div>';
-    document.getElementById('spinner').style.display = 'none';
-  }
-}
-
-// ============================================================
-// RENDER REPORT
-// ============================================================
-function renderReport(r, clientName, industry, teamSize){
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('reportTitle').textContent = clientName + ' -- AI Opportunity Audit';
-  document.getElementById('reportMeta').innerHTML = '<div><b>Industry:</b> ' + industry + '</div><div><b>Team:</b> ' + (teamSize||'N/A') + '</div><div><b>Date:</b> ' + date + '</div><div><b>Opportunities:</b> ' + r.opportunities.length + '</div>';
-  var h = '';
-  if(r.keySignals && r.keySignals.length){
-    h += '<div class="signals-box"><div class="signals-title">Key Signals Extracted</div>' + r.keySignals.map(function(s){ return '-> ' + s; }).join('<br>') + '</div>';
-  }
-  h += '<h2>Executive Summary</h2><p>' + r.executiveSummary + '</p>';
-  h += '<h2>Current State</h2><p>' + r.currentState + '</p>';
-  h += '<h2>Estimated ROI</h2><div class="roi-box">';
-  h += '<div class="roi-item"><label>Time Saved / Week</label><div class="value">' + r.roi.timeSavedPerWeek + '</div></div>';
-  h += '<div class="roi-item"><label>Annual Value</label><div class="value">' + r.roi.estimatedAnnualValue + '</div></div>';
-  h += '<div class="roi-item"><label>Implementation Cost</label><div class="value">' + r.roi.implementationCost + '</div></div>';
-  h += '<div class="roi-item"><label>ROI Multiple</label><div class="value">' + r.roi.roiMultiple + '</div></div></div>';
-  h += '<h2>Opportunity Matrix</h2><div class="matrix">';
-  h += '<div class="matrix-cell highlight"><div class="cell-label" style="color:var(--accent)">Quick Wins</div><div class="items">' + (r.matrix.quickWins||[]).map(function(i){ return '-> ' + i; }).join('<br>') + '</div></div>';
-  h += '<div class="matrix-cell"><div class="cell-label" style="color:var(--accent2)">Strategic Bets</div><div class="items">' + (r.matrix.strategicBets||[]).map(function(i){ return '-> ' + i; }).join('<br>') + '</div></div>';
-  h += '<div class="matrix-cell"><div class="cell-label">Fill-ins</div><div class="items">' + (r.matrix.fillIns||[]).map(function(i){ return '-> ' + i; }).join('<br>') + '</div></div>';
-  h += '<div class="matrix-cell"><div class="cell-label" style="color:var(--muted)">Deprioritise</div><div class="items">' + (r.matrix.deprioritize||[]).map(function(i){ return '-> ' + i; }).join('<br>') + '</div></div></div>';
-  h += '<p style="font-size:10px;color:var(--muted);margin-top:6px;">Rows: Impact (High top, Low bottom) -- Columns: Effort (Low left, High right)</p>';
-  h += '<h2>Opportunities (' + r.opportunities.length + ' Found)</h2>';
-  r.opportunities.forEach(function(o){
-    var cls = o.impact === 'High' ? 'high' : o.impact === 'Medium' ? 'medium' : 'low';
-    var p = o.pricing || {};
-    var pr = '';
-    if(p.projectFee){
-      pr = '<div class="price-row"><div class="price-box proj"><div class="price-label">Project Fee</div><div class="price-val proj">' + p.projectFee + '</div></div><div class="price-box ret"><div class="price-label">Monthly Retainer</div><div class="price-val ret">' + (p.retainerFee||'N/A') + '</div></div></div>';
-      if(p.pricingNotes) pr += '<div style="font-size:10px;color:var(--muted);margin-top:6px;">' + p.pricingNotes + '</div>';
-    }
-    h += '<div class="opp-card ' + cls + '"><div class="opp-title">' + o.title + '</div>';
-    h += '<div class="opp-meta"><span class="tag tag-' + o.impact.toLowerCase() + '">' + o.impact + ' Impact</span><span class="tag tag-' + o.effort.toLowerCase() + '">' + o.effort + ' Effort</span><span class="tag">' + o.category + '</span></div>';
-    h += '<div class="opp-text"><b style="color:#ddd">Now:</b> ' + o.currentState + '<br><b style="color:#ddd">Solution:</b> ' + o.solution + '<br><b style="color:#ddd">Outcome:</b> ' + o.outcome + '</div>' + pr + '</div>';
-  });
-  if(r.pricingSummary){
-    var ps = r.pricingSummary;
-    h += '<h2>Pricing Summary</h2><div class="pricing-summary"><div class="ps-grid"><div class="ps-item"><label>Total Project Range</label><div class="ps-val" style="color:var(--accent)">' + ps.totalProjectMin + ' -- ' + ps.totalProjectMax + '</div></div><div class="ps-item"><label>Total Retainer Range</label><div class="ps-val" style="color:var(--accent2)">' + ps.totalRetainerMin + ' -- ' + ps.totalRetainerMax + '</div></div></div>';
-    if(ps.recommendation) h += '<div class="ps-rec">Recommendation: ' + ps.recommendation + '</div>';
-    h += '</div>';
-  }
-  h += '<h2>Implementation Roadmap</h2>';
-  r.roadmap.forEach(function(p, i){
-    h += '<div class="roadmap-phase"><div class="phase-num">0' + (i+1) + '</div><div><div class="phase-title">' + p.phase + ' -- ' + p.focus + '</div><div class="phase-items">' + p.items.map(function(item){ return '-> ' + item; }).join('<br>') + '</div></div></div>';
-  });
-  h += '<h2>Recommended Next Steps</h2><p>' + r.nextSteps + '</p>';
-  document.getElementById('reportBody').innerHTML = h;
-  reportText = buildReportText(r, clientName, industry, teamSize, date);
-}
-
-function buildReportText(r, clientName, industry, teamSize, date){
-  var t = 'AI OPPORTUNITY AUDIT\n' + clientName + '\n' + industry + ' | ' + (teamSize||'N/A') + ' | ' + date + '\n\n';
-  t += 'EXECUTIVE SUMMARY\n' + r.executiveSummary + '\n\n';
-  t += 'CURRENT STATE\n' + r.currentState + '\n\n';
-  t += 'ROI: ' + r.roi.timeSavedPerWeek + ' saved/week | ' + r.roi.estimatedAnnualValue + ' annual value\n\n';
-  r.opportunities.forEach(function(o, i){
-    t += (i+1) + '. ' + o.title + ' (' + o.impact + ' Impact)\n';
-    t += '   Now: ' + o.currentState + '\n';
-    t += '   Solution: ' + o.solution + '\n\n';
-  });
-  return t;
-}
-
-// ============================================================
-// PROPOSAL
-// ============================================================
-async function goToProposal(){
-  if(!currentReport) return;
-  setStep(4);
-  document.getElementById('procTitle').textContent = 'Stage 3 -- Building Proposal';
-  document.getElementById('procSub').textContent = 'Writing client-facing proposal...';
-  setStep(2);
-  document.getElementById('panel2').className = 'panel active';
-  document.getElementById('panel4').className = 'panel';
-
-  await runLogs(LOGS3, 'Phase 3 -- Proposal Generation');
-
-  var r = currentReport;
-  var ps = r.pricingSummary || {};
-  var opps = (r.opportunities || []).map(function(o, i){ return (i+1) + '. ' + o.title + ' -- ' + o.solution; }).join('; ');
-
-  var prompt = 'You are a senior AI agency consultant writing a client proposal for ' + currentAgencyName + '.'
-    + ' Write a full persuasive professional proposal based on this audit data. All prices in USD.\n\n'
-    + 'CLIENT: ' + currentClientName + '\n'
-    + 'INDUSTRY: ' + currentIndustry + '\n'
-    + 'AGENCY: ' + currentAgencyName + ' (' + currentAgencyEmail + ')\n\n'
-    + 'AUDIT SUMMARY: ' + r.executiveSummary + '\n\n'
-    + 'KEY OPPORTUNITIES: ' + opps + '\n\n'
-    + 'PRICING: Project ' + (ps.totalProjectMin||'') + '-' + (ps.totalProjectMax||'') + ' | Retainer ' + (ps.totalRetainerMin||'') + '-' + (ps.totalRetainerMax||'') + '/mo\n\n'
-    + 'ROI: ' + r.roi.estimatedAnnualValue + ' annual value, ' + r.roi.timeSavedPerWeek + ' saved per week\n\n'
-    + 'Return ONLY a JSON object with no markdown:\n'
-    + '{"tagline":"one powerful sentence summarising the transformation",'
-    + '"problemStatement":"2-3 sentences on their specific pain",'
-    + '"ourApproach":"2-3 sentences on how you will solve it",'
-    + '"scopeItems":["deliverable 1","deliverable 2","deliverable 3","deliverable 4"],'
-    + '"timeline":"realistic timeline e.g. 6-8 weeks",'
-    + '"projectOption":{"title":"project name","price":"$amount","description":"2 sentences","includes":["item1","item2","item3","item4"]},'
-    + '"retainerOption":{"title":"retainer name","price":"$/month","description":"2 sentences","includes":["item1","item2","item3","item4"]},'
-    + '"whyUs":"2 sentences on why this agency",'
-    + '"guarantee":"1 sentence guarantee",'
-    + '"closingLine":"1 compelling closing sentence"}';
-
-  try{
-    var raw = await callClaude(prompt, 2500);
-    currentProposal = JSON.parse(raw);
-    renderProposal(currentProposal, 'proposalContent');
-    proposalText = JSON.stringify(currentProposal);
-    document.getElementById('panel2').className = 'panel';
-    document.getElementById('panel4').className = 'panel active';
-    setStep(4);
-  }catch(err){
-    document.getElementById('procError').innerHTML = '<div class="error-box">Proposal error: ' + err.message + '. Please try again.</div>';
-    document.getElementById('spinner').style.display = 'none';
-    setStep(3);
-  }
-}
-
-function renderProposal(p, containerId){
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  var h = '';
-  h += '<div class="proposal-section" style="border-top:3px solid var(--accent);text-align:center;padding:28px;">';
-  h += '<div class="badge" style="margin:0 auto 12px;">Proposal</div>';
-  h += '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;">' + currentClientName + '</div>';
-  h += '<div style="font-size:12px;color:var(--accent);font-family:Syne,sans-serif;font-weight:600;margin-bottom:5px;">' + p.tagline + '</div>';
-  h += '<div style="font-size:10px;color:var(--muted);">Prepared by ' + currentAgencyName + ' | ' + date + '</div></div>';
-  h += '<div class="proposal-section"><h3>The Opportunity</h3><div class="proposal-block">' + p.problemStatement + '</div></div>';
-  h += '<div class="proposal-section"><h3>Our Approach</h3><div class="proposal-block">' + p.ourApproach + '</div>';
-  h += '<div style="margin-top:12px;">';
-  (p.scopeItems||[]).forEach(function(item){ h += '<div class="scope-item"><span>-&gt;</span>' + item + '</div>'; });
-  h += '<div style="font-size:10px;color:var(--muted);margin-top:8px;">Timeline: ' + p.timeline + '</div></div></div>';
-  h += '<div class="proposal-section"><h3>Investment Options</h3><div class="price-grid">';
-  h += '<div class="price-card rec"><div class="pc-badge a">Option A</div>';
-  h += '<div class="pc-label">' + ((p.projectOption||{}).title||'One-Time Project') + '</div>';
-  h += '<div class="pc-price proj">' + ((p.projectOption||{}).price||'TBD') + '</div>';
-  h += '<div class="pc-desc">' + ((p.projectOption||{}).description||'') + '</div>';
-  ((p.projectOption||{}).includes||[]).forEach(function(i){ h += '<div class="pc-inc">+ ' + i + '</div>'; });
-  h += '</div>';
-  h += '<div class="price-card ret-card"><div class="pc-badge b">Option B</div>';
-  h += '<div class="pc-label">' + ((p.retainerOption||{}).title||'Monthly Retainer') + '</div>';
-  h += '<div class="pc-price ret">' + ((p.retainerOption||{}).price||'TBD') + '</div>';
-  h += '<div class="pc-desc">' + ((p.retainerOption||{}).description||'') + '</div>';
-  ((p.retainerOption||{}).includes||[]).forEach(function(i){ h += '<div class="pc-inc">+ ' + i + '</div>'; });
-  h += '</div></div></div>';
-  h += '<div class="proposal-section"><h3>Why ' + currentAgencyName + '</h3><div class="proposal-block">' + p.whyUs + '</div>';
-  if(p.guarantee) h += '<div style="font-size:11px;color:var(--accent2);margin-top:10px;padding:10px;border:1px solid rgba(71,255,212,0.2);">Guarantee: ' + p.guarantee + '</div>';
-  h += '</div>';
-  h += '<div class="esign-box" id="esignBox">';
-  h += '<div class="esign-title">Ready to Move Forward?</div>';
-  h += '<div class="esign-sub">' + p.closingLine + '<br><br>Select your preferred option below to confirm.</div>';
-  h += '<input class="esign-input" id="esignName" type="text" placeholder="Your full name"/>';
-  h += '<div class="esign-opts">';
-  h += '<button class="esign-btn proj" onclick="acceptProposalA()">Accept Option A -- ' + ((p.projectOption||{}).price||'Project') + '</button>';
-  h += '<button class="esign-btn ret" onclick="acceptProposalB()">Accept Option B -- ' + ((p.retainerOption||{}).price||'Retainer') + '</button>';
-  h += '</div><div style="font-size:10px;color:var(--muted);margin-top:10px;">By clicking accept you confirm interest. No payment taken at this stage.</div></div>';
-  h += '<div class="esign-ok" id="esignOk"><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;margin-bottom:6px;">Proposal Accepted</div><div id="esignConfirmMsg" style="font-size:12px;"></div></div>';
-  h += '<div style="text-align:center;margin-top:14px;font-size:10px;color:var(--muted);">Prepared by ' + currentAgencyName + ' | ' + currentAgencyEmail + ' | ' + date + '</div>';
-  document.getElementById(containerId).innerHTML = h;
-}
-
-function acceptProposalA(){ acceptProposal('project'); }
-function acceptProposalB(){ acceptProposal('retainer'); }
-function acceptProposal(type){
-  var name = ((document.getElementById('esignName') ? document.getElementById('esignName').value.trim() : '')) || currentClientName;
-  var option = type === 'project' ? 'Option A (One-Time Project)' : 'Option B (Monthly Retainer)';
-  var msg = name + ' has accepted ' + option + ' on ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) + '. ' + currentAgencyName + ' will follow up within 24 hours.';
-  var box = document.getElementById('esignBox');
-  var ok = document.getElementById('esignOk');
-  var conf = document.getElementById('esignConfirmMsg');
-  if(box) box.style.display = 'none';
-  if(ok) ok.style.display = 'block';
-  if(conf) conf.textContent = msg;
-}
-
-// ============================================================
-// FOLLOW-UP EMAIL
-// ============================================================
-async function generateFollowUp(){
-  var errEl = document.getElementById('followupError');
-  errEl.innerHTML = '';
-  if(!currentReport){
-    errEl.innerHTML = '<div class="error-box">Run the analysis first.</div>';
-    return;
-  }
-  var clientFirst = document.getElementById('clientFirstName').value.trim() || currentClientName.split(' ')[0];
-  var deliveryDate = document.getElementById('reportDeliveryDate').value.trim() || 'within 48 hours';
-  var pains = (currentReport.painPoints || []).slice(0,3).join(', ') || 'the key operational challenges discussed';
-  var topOpp = (currentReport.opportunities && currentReport.opportunities[0]) ? currentReport.opportunities[0].title : 'AI automation opportunities';
-
-  var prompt = 'Write a short post-discovery-call follow-up email from ' + currentAgencyName + ' (' + currentAgencyEmail + ') to ' + clientFirst + ' at ' + currentClientName + '.\n\n'
-    + 'Key pain points discussed: ' + pains + '\n'
-    + 'Top opportunity identified: ' + topOpp + '\n'
-    + 'Audit report delivery date: ' + deliveryDate + '\n\n'
-    + 'Write 4-5 sentences that: thank them genuinely (not generically), confirm 2-3 main pain points using their exact language, mention the top opportunity, give the specific delivery date, end with a friendly close.\n\n'
-    + 'Rules: No "I hope this email finds you well". No "It was a pleasure". Sound human not corporate. Max 5 sentences.\n\n'
-    + 'Return ONLY JSON: {"subject":"email subject","body":"email body with newlines as \\n"}';
-
-  var btn = document.querySelector('#followupSection .btn-accent2');
-  if(btn){ btn.textContent = '...Drafting'; btn.disabled = true; }
-  try{
-    var raw = await callClaude(prompt, 600);
-    var parsed = JSON.parse(raw);
-    var box = document.getElementById('followupBox');
-    box.innerHTML = '<strong style="color:var(--accent2)">Subject: ' + parsed.subject + '</strong><br><br>' + parsed.body.replace(/\n/g,'<br>');
-    document.getElementById('followupOutput').style.display = 'block';
-    window._followupText = 'Subject: ' + parsed.subject + '\n\n' + parsed.body;
-  }catch(err){
-    errEl.innerHTML = '<div class="error-box">Email generation failed: ' + err.message + '</div>';
-  }finally{
-    if(btn){ btn.textContent = 'Generate Follow-Up Email'; btn.disabled = false; }
-  }
-}
-
-function copyFollowUp(){
-  if(!window._followupText) return;
-  navigator.clipboard.writeText(window._followupText).then(function(){
-    document.getElementById('followupCopyMsg').innerHTML = '<div class="save-msg">Copied to clipboard</div>';
-    setTimeout(function(){ document.getElementById('followupCopyMsg').innerHTML = ''; }, 2000);
-  });
-}
-
-// ============================================================
-// PROPOSAL REVIEW
-// ============================================================
-async function reviewProposal(){
-  var errEl = document.getElementById('reviewError');
-  errEl.innerHTML = '';
-  if(!currentProposal){
-    errEl.innerHTML = '<div class="error-box">Generate a proposal first.</div>';
-    return;
-  }
-  var propStr = JSON.stringify(currentProposal);
-  var prompt = 'You are a senior proposal reviewer for ' + currentAgencyName + ', an AI automation agency.\n'
-    + 'Review this proposal for ' + currentClientName + ' and identify specific issues to fix before sending.\n\n'
-    + 'PROPOSAL DATA:\n' + propStr + '\n\n'
-    + 'Review for:\n'
-    + '1. FALSE CLAIMS - any claim of past experience or track record that may not be true for a new agency\n'
-    + '2. WEAK COPY - vague or generic statements that could apply to any client\n'
-    + '3. MISSING SPECIFICS - places where client-specific details should be added\n'
-    + '4. RISKY GUARANTEES - any guarantee that may be hard to deliver\n'
-    + '5. PRICING ISSUES - pricing that seems off for the scope described\n'
-    + '6. TONE ISSUES - anything too salesy, desperate, or unprofessional\n'
-    + '7. STRONG POINTS - what is working well and should be kept\n\n'
-    + 'Return ONLY a JSON object with no markdown:\n'
-    + '{"verdict":"Ready to send|Needs minor fixes|Needs significant fixes",'
-    + '"issues":[{"category":"FALSE CLAIMS|WEAK COPY|MISSING SPECIFICS|RISKY GUARANTEES|PRICING ISSUES|TONE ISSUES","field":"which proposal field this affects e.g. whyUs|guarantee|tagline|problemStatement|ourApproach|closingLine","problemText":"exact text that is problematic","whyIssue":"why this is a problem","suggestedFix":"specific replacement text or instruction"}],'
-    + '"strongPoints":["what is working well 1","what is working well 2"]}';
-
-  var btn = document.querySelector('#reviewSection .btn-crimson');
-  if(btn){ btn.textContent = '...Reviewing'; btn.disabled = true; }
-  try{
-    var raw = await callClaude(prompt, 1500);
-    var parsed;
-    try{ parsed = JSON.parse(raw); } catch(e){ parsed = null; }
-    if(!parsed || !parsed.issues){
-      document.getElementById('reviewBox').innerHTML = '<div style="white-space:pre-wrap;font-size:12px;color:#ccc;">' + raw.replace(/</g,'&lt;') + '</div>';
-      document.getElementById('reviewOutput').style.display = 'block';
-      window._reviewText = raw;
-    } else {
-      window._reviewData = parsed;
-      var verdictClass = parsed.verdict === 'Ready to send' ? 'verdict-ready' : parsed.verdict === 'Needs minor fixes' ? 'verdict-minor' : 'verdict-major';
-      var h = '<div class="' + verdictClass + '" style="margin-bottom:16px;font-size:15px;">' + (parsed.verdict||'Review complete') + '</div>';
-      if(parsed.strongPoints && parsed.strongPoints.length){
-        h += '<div class="good" style="margin-bottom:16px;"><strong style="color:var(--accent2)">STRONG POINTS</strong><br>';
-        h += parsed.strongPoints.map(function(s){ return '+ ' + s; }).join('<br>') + '</div>';
-      }
-      if(parsed.issues && parsed.issues.length){
-        h += '<div style="font-family:Syne,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--muted);margin-bottom:10px;">ISSUES FOUND -- tick the fixes you want applied</div>';
-        parsed.issues.forEach(function(issue, i){
-          h += '<div class="issue" style="margin-bottom:12px;">';
-          h += '<label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">';
-          h += '<input type="checkbox" class="review-fix-cb" data-idx="' + i + '" style="margin-top:3px;flex-shrink:0;accent-color:var(--accent);">';
-          h += '<div>';
-          h += '<div style="font-size:10px;font-weight:700;color:var(--danger);letter-spacing:0.08em;margin-bottom:4px;">' + (issue.category||'ISSUE') + '</div>';
-          h += '<div style="font-size:11px;color:#aaa;margin-bottom:4px;"><strong style="color:#ddd">Problem:</strong> ' + (issue.problemText||'') + '</div>';
-          h += '<div style="font-size:11px;color:#aaa;margin-bottom:4px;"><strong style="color:#ddd">Why:</strong> ' + (issue.whyIssue||'') + '</div>';
-          h += '<div style="font-size:11px;color:var(--accent2);"><strong style="color:#ddd">Fix:</strong> ' + (issue.suggestedFix||'') + '</div>';
-          h += '</div></label></div>';
-        });
-        h += '<div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">';
-        h += '<button class="btn btn-ghost btn-sm" onclick="selectAllFixes()">Select All</button>';
-        h += '<button class="btn btn-ghost btn-sm" onclick="deselectAllFixes()">Deselect All</button>';
-        h += '<button class="btn btn-primary" onclick="applySelectedFixes()">Apply Selected Fixes to Proposal</button>';
-        h += '</div>';
-        h += '<div id="applyFixesMsg" style="margin-top:8px;"></div>';
-      } else {
-        h += '<div class="good">No issues found. Proposal looks good.</div>';
-      }
-      document.getElementById('reviewBox').innerHTML = h;
-      document.getElementById('reviewOutput').style.display = 'block';
-      window._reviewText = (parsed.verdict||'') + ': ' + (parsed.issues||[]).length + ' issues found';
-    }
-  }catch(err){
-    errEl.innerHTML = '<div class="error-box">Review failed: ' + err.message + '</div>';
-  }finally{
-    if(btn){ btn.textContent = 'Review Proposal Before Sending'; btn.disabled = false; }
-  }
-}
-
-function copyReview(){
-  if(!window._reviewText) return;
-  navigator.clipboard.writeText(window._reviewText).then(function(){
-    document.getElementById('reviewCopyMsg').innerHTML = '<div class="save-msg">Copied to clipboard</div>';
-    setTimeout(function(){ document.getElementById('reviewCopyMsg').innerHTML = ''; }, 2000);
-  });
-}
-
-// ============================================================
-// IMPLEMENTATION GUIDE
-// ============================================================
-async function generateImplGuide(){
-  var errEl = document.getElementById('implError');
-  errEl.innerHTML = '';
-  if(!currentProposal || !currentReport){
-    errEl.innerHTML = '<div class="error-box">Generate a proposal first.</div>';
-    return;
-  }
-  var opps = (currentReport.opportunities || []).map(function(o){ return o.title + ': ' + o.solution; }).join('; ');
-  var scope = (currentProposal.scopeItems || []).join(', ');
-
-  var prompt = 'You are a senior AI automation engineer. Based on this project scope, write a detailed internal implementation guide for the agency team.\n\n'
-    + 'CLIENT: ' + currentClientName + '\n'
-    + 'INDUSTRY: ' + currentIndustry + '\n'
-    + 'SCOPE ITEMS: ' + scope + '\n'
-    + 'OPPORTUNITIES TO BUILD: ' + opps + '\n'
-    + 'TIMELINE: ' + (currentProposal.timeline || '6-8 weeks') + '\n\n'
-    + 'For EACH scope item or opportunity, provide:\n'
-    + '1. WHAT TO BUILD - plain English explanation of what needs to be built\n'
-    + '2. TECH STACK - which tools to use from: Make.com (primary automation), Python (custom logic), Anthropic API or OpenAI API (AI steps)\n'
-    + '3. STEP BY STEP - numbered implementation steps\n'
-    + '4. CODE SNIPPET - actual working code or Make.com module configuration where relevant\n'
-    + '5. CLIENT ACCESS NEEDED - what credentials or access you need from the client\n'
-    + '6. TESTING - how to test before going live\n'
-    + '7. RISKS - what could go wrong and how to handle it\n\n'
-    + 'Then provide:\n'
-    + '- RECOMMENDED BUILD ORDER - which to build first, second, third and why\n'
-    + '- TOTAL TIME ESTIMATE - realistic hours per item\n'
-    + '- HANDOVER CHECKLIST - what to deliver to client at end\n\n'
-    + 'Be technical and specific. Include real code. Use Make.com as primary tool where possible.\n'
-    + 'Format with clear headers for each section.';
-
-  var btn = document.querySelector('#implSection .btn-blue');
-  if(!btn) btn = document.querySelector('[onclick="generateImplGuide()"]');
-  if(btn){ btn.textContent = '...Building Guide'; btn.disabled = true; }
-  try{
-    var raw = await callClaude(prompt, 4000);
-    var formatted = raw
-      .replace(/\n\n/g,'<br><br>')
-      .replace(/\n/g,'<br>')
-      .replace(/##\s*([^\n<]+)/g,'<h4>$1</h4>')
-      .replace(/###\s*([^\n<]+)/g,'<h4>$1</h4>')
-      
-    document.getElementById('implBox').innerHTML = formatted;
-    document.getElementById('implOutput').style.display = 'block';
-    window._implText = raw;
-  }catch(err){
-    errEl.innerHTML = '<div class="error-box">Implementation guide failed: ' + err.message + '</div>';
-  }finally{
-    if(btn){ btn.textContent = 'Generate Implementation Guide'; btn.disabled = false; }
-  }
-}
-
-function copyImpl(){
-  if(!window._implText) return;
-  navigator.clipboard.writeText(window._implText).then(function(){
-    document.getElementById('implCopyMsg').innerHTML = '<div class="save-msg">Copied to clipboard</div>';
-    setTimeout(function(){ document.getElementById('implCopyMsg').innerHTML = ''; }, 2000);
-  });
-}
-
-// ============================================================
-// SAVE / LIBRARY
-// ============================================================
-function getAudits(){ try{ return JSON.parse(localStorage.getItem('ai_audits')||'[]'); }catch{ return []; } }
-function saveAudits(list){ localStorage.setItem('ai_audits', JSON.stringify(list)); }
-
-function updateLibCount(){
-  var n = getAudits().length;
-  document.getElementById('libCount').textContent = n;
-  var b = document.getElementById('clearAllBtn');
-  if(b) b.style.display = n > 0 ? 'inline-flex' : 'none';
-}
-
-function saveAudit(){
-  if(!currentReport) return;
-  var audits = getAudits();
-  var id = Date.now().toString();
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  audits.unshift({id:id,clientName:currentClientName,industry:currentIndustry,teamSize:currentTeamSize,agencyName:currentAgencyName,agencyEmail:currentAgencyEmail,date:date,report:currentReport,proposal:currentProposal});
-  saveAudits(audits);
-  updateLibCount();
-  var msgId = currentProposal ? 'proposalSaveMsg' : 'saveMsg';
-  document.getElementById(msgId).innerHTML = '<div class="save-msg">Saved to library</div>';
-}
-
-function clearAll(){
-  if(confirm('Clear all saved audits?')){
-    localStorage.removeItem('ai_audits');
-    updateLibCount();
-    renderLibrary();
-  }
-}
-
-function renderLibrary(){
-  var audits = getAudits();
-  var el = document.getElementById('libraryList');
-  if(!audits.length){
-    el.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--muted);"><div style="font-size:36px;margin-bottom:16px;">[audits]</div><div>No saved audits yet</div><div style="font-size:11px;margin-top:6px;">Run an audit and click Save to store it here</div></div>';
-    return;
-  }
-  el.innerHTML = '';
-  audits.forEach(function(a){
-    var card = document.createElement('div');
-    card.className = 'audit-card';
-    card.innerHTML = '<div class="audit-card-title">' + a.clientName + ' -- AI Opportunity Audit</div>'
-      + '<div class="audit-card-meta"><span>' + a.industry + '</span><span>' + (a.teamSize||'N/A') + '</span><span>' + a.date + '</span><span>' + a.report.opportunities.length + ' opportunities</span></div>'
-      + '<div class="audit-card-actions"></div>';
-    card.addEventListener('click', function(){ openAudit(a.id); });
-    var actions = card.querySelector('.audit-card-actions');
-    actions.addEventListener('click', function(e){ e.stopPropagation(); });
-    var btnView = document.createElement('button');
-    btnView.className = 'btn btn-ghost btn-sm';
-    btnView.textContent = 'View Report';
-    btnView.addEventListener('click', function(){ openAudit(a.id); });
-    actions.appendChild(btnView);
-    if(a.proposal){
-      var btnProp = document.createElement('button');
-      btnProp.className = 'btn btn-ghost btn-sm';
-      btnProp.textContent = 'View Proposal';
-      btnProp.addEventListener('click', function(){ openProposal(a.id); });
-      actions.appendChild(btnProp);
-    }
-    var btnAuditPDF = document.createElement('button');
-    btnAuditPDF.className = 'btn btn-blue btn-sm';
-    btnAuditPDF.textContent = 'Audit PDF';
-    btnAuditPDF.addEventListener('click', function(){ downloadSavedAuditPDF(a.id); });
-    actions.appendChild(btnAuditPDF);
-    if(a.proposal){
-      var btnPropPDF = document.createElement('button');
-      btnPropPDF.className = 'btn btn-blue btn-sm';
-      btnPropPDF.textContent = 'Proposal PDF';
-      btnPropPDF.addEventListener('click', function(){ downloadSavedProposalPDF(a.id); });
-      actions.appendChild(btnPropPDF);
-    }
-    var btnDel = document.createElement('button');
-    btnDel.className = 'btn btn-danger btn-sm';
-    btnDel.textContent = 'Delete';
-    btnDel.addEventListener('click', function(){ deleteAudit(a.id); });
-    actions.appendChild(btnDel);
-    el.appendChild(card);
-  });
-}
-function deleteAudit(id){
-  var audits = getAudits().filter(function(a){ return a.id !== id; });
-  saveAudits(audits);
-  updateLibCount();
-  renderLibrary();
-}
-
-function openAudit(id){
-  var a = getAudits().find(function(x){ return x.id === id; });
-  if(!a) return;
-  document.getElementById('modalTitle').textContent = a.clientName + ' -- Audit Report';
-  var date = a.date;
-  var h = '';
-  if(a.report.keySignals && a.report.keySignals.length){
-    h += '<div class="signals-box"><div class="signals-title">Key Signals</div>' + a.report.keySignals.map(function(s){ return '-> ' + s; }).join('<br>') + '</div>';
-  }
-  h += '<h2 style="font-family:Syne,sans-serif;font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 8px;text-transform:uppercase;">Executive Summary</h2><p style="font-size:12px;line-height:1.8;color:#ccc;">' + a.report.executiveSummary + '</p>';
-  h += '<h2 style="font-family:Syne,sans-serif;font-size:12px;font-weight:700;color:var(--accent);margin:16px 0 8px;text-transform:uppercase;">ROI Estimate</h2>';
-  h += '<div class="roi-box"><div class="roi-item"><label>Time Saved/Week</label><div class="value">' + a.report.roi.timeSavedPerWeek + '</div></div><div class="roi-item"><label>Annual Value</label><div class="value">' + a.report.roi.estimatedAnnualValue + '</div></div><div class="roi-item"><label>Cost</label><div class="value">' + a.report.roi.implementationCost + '</div></div><div class="roi-item"><label>ROI</label><div class="value">' + a.report.roi.roiMultiple + '</div></div></div>';
-  document.getElementById('modalReportWrap').innerHTML = h;
-  document.getElementById('modalProposalWrap').style.display = 'none';
-  document.getElementById('modalProposalPDFBtn').style.display = 'none';
-  if(a.proposal) document.getElementById('modalProposalPDFBtn').style.display = 'inline-flex';
-  document.getElementById('modalOverlay').className = 'modal-overlay open';
-  modalAuditId = id;
-}
-
-function openProposal(id){
-  var a = getAudits().find(function(x){ return x.id === id; });
-  if(!a || !a.proposal) return;
-  document.getElementById('modalTitle').textContent = a.clientName + ' -- Proposal';
-  document.getElementById('modalReportWrap').innerHTML = '';
-  var oldCN = currentClientName;
-  var oldAN = currentAgencyName;
-  var oldAE = currentAgencyEmail;
-  currentClientName = a.clientName;
-  currentAgencyName = a.agencyName;
-  currentAgencyEmail = a.agencyEmail;
-  renderProposal(a.proposal, 'modalProposalWrap');
-  document.getElementById('modalProposalWrap').style.display = 'block';
-  currentClientName = oldCN;
-  currentAgencyName = oldAN;
-  currentAgencyEmail = oldAE;
-  document.getElementById('modalProposalPDFBtn').style.display = 'inline-flex';
-  document.getElementById('modalOverlay').className = 'modal-overlay open';
-  modalAuditId = id;
-}
-
-function closeModal(){
-  document.getElementById('modalOverlay').className = 'modal-overlay';
-}
-
-// ============================================================
-// COPY
-// ============================================================
-function copyReport(){
-  if(reportText) navigator.clipboard.writeText(reportText);
-}
-function copyProposal(){
-  if(proposalText) navigator.clipboard.writeText(proposalText);
-}
-
-// ============================================================
-// PDF GENERATION
-// ============================================================
-function drawLogoPDF(doc, pw, m){
-  var ls = 14, lx = pw - m - ls, ly = 19;
-  doc.setDrawColor(225,29,72); doc.setFillColor(10,10,16); doc.setLineWidth(1.2);
-  doc.rect(lx, ly, ls, ls, 'FD');
-  doc.setDrawColor(59,130,246); doc.setLineWidth(0.8);
-  doc.rect(lx+3, ly+3, ls-6, ls-6);
-  doc.setFillColor(225,29,72); doc.rect(lx-2, ly-1.5, 6, 2, 'F');
-  doc.setFillColor(59,130,246); doc.rect(lx+ls-4, ly+ls, 6, 2, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
-  var rw = doc.getTextWidth('R');
-  doc.text('R', lx + (ls/2) - (rw/2), ly + (ls/2) + 3);
-  doc.setFontSize(6); doc.setTextColor(140,140,140); doc.setCharSpace(2);
-  doc.text('RATOVA AI', lx - 38, ly + (ls/2) + 2);
-  doc.setCharSpace(0);
-}
-
-function downloadAuditPDF(){
-  if(!currentReport) return;
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  generateAuditPDF(currentReport, currentClientName, currentIndustry, currentTeamSize, date);
-}
-
-function generateAuditPDF(r, clientName, industry, teamSize, date){
-  var doc = new jspdf.jsPDF({unit:'mm',format:'a4'});
-  var pw = doc.internal.pageSize.getWidth(), m = 18, maxW = pw - m*2;
-  var y = 20;
-  function chk(n){ if(!n) n=12; if(y+n>275){ doc.addPage(); y=20; doc.setFillColor(10,10,16); doc.rect(0,0,pw,297,'F'); } }
-  function secTitle(t){ chk(14); doc.setFillColor(232,255,71); doc.rect(m,y,maxW,7,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0); doc.text(t.toUpperCase(),m+3,y+5); y+=11; }
-  function bodyTxt(t,sz){ if(!sz) sz=9; doc.setFont('helvetica','normal'); doc.setFontSize(sz); doc.setTextColor(200,200,200); var lines=doc.splitTextToSize(t,maxW); lines.forEach(function(l){ chk(6); doc.text(l,m,y); y+=5.5; }); y+=2; }
-  doc.setFillColor(10,10,16); doc.rect(0,0,pw,297,'F');
-  drawLogoPDF(doc, pw, m);
-  doc.setFillColor(232,255,71); doc.rect(m,20,46,6,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0);
-  doc.text('AI OPPORTUNITY AUDIT',m+2,24.5);
-  doc.setFontSize(20); doc.setTextColor(240,240,240); doc.text(clientName,m,40);
-  doc.setFontSize(10); doc.setTextColor(100,100,100);
-  doc.text(industry + '  |  ' + (teamSize||'N/A') + '  |  ' + date,m,50);
-  doc.setDrawColor(34,34,34); doc.line(m,56,pw-m,56); y=66;
-  if(r.keySignals && r.keySignals.length){ secTitle('Key Signals'); r.keySignals.forEach(function(s){ bodyTxt('-> ' + s); }); }
-  secTitle('Executive Summary'); bodyTxt(r.executiveSummary);
-  secTitle('Current State'); bodyTxt(r.currentState);
-  secTitle('Estimated ROI');
-  [['Time Saved/Week',r.roi.timeSavedPerWeek],['Annual Value',r.roi.estimatedAnnualValue],['Cost',r.roi.implementationCost],['ROI',r.roi.roiMultiple]].forEach(function(kv){
-    chk(8); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text(kv[0].toUpperCase(),m,y); doc.setFontSize(11); doc.setTextColor(232,255,71);
-    doc.text(kv[1],m+44,y); y+=7;
-  }); y+=3;
-  secTitle('Opportunities (' + r.opportunities.length + ')');
-  r.opportunities.forEach(function(o,i){
-    chk(32);
-    var ic = o.impact==='High' ? [232,255,71] : o.impact==='Medium' ? [71,255,212] : [100,100,100];
-    doc.setFillColor(26,26,26); doc.rect(m,y,maxW,5,'F');
-    doc.setFillColor(ic[0],ic[1],ic[2]); doc.rect(m,y,3,24,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(240,240,240);
-    doc.text((i+1) + '. ' + o.title, m+6, y+4);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text(o.impact + ' Impact | ' + o.effort + ' Effort | ' + o.category, m+6, y+9);
-    doc.setTextColor(180,180,180);
-    var nl = doc.splitTextToSize('Now: ' + o.currentState, maxW-8);
-    chk(nl.length*4+4); doc.text(nl,m+6,y+14); y+=24+(nl.length-1)*4;
-    var sl = doc.splitTextToSize('Solution: ' + o.solution, maxW-8);
-    chk(sl.length*4+4); doc.text(sl,m+6,y); y+=sl.length*4+2;
-    var ol = doc.splitTextToSize('Outcome: ' + o.outcome, maxW-8);
-    chk(ol.length*4+4); doc.text(ol,m+6,y); y+=ol.length*4+4;
-    if(o.pricing && o.pricing.projectFee){
-      chk(14);
-      doc.setFillColor(232,255,71); doc.rect(m+6,y,36,5,'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0);
-      doc.text('PROJECT FEE',m+8,y+3.5);
-      doc.setFillColor(71,255,212); doc.rect(m+46,y,42,5,'F');
-      doc.text('MONTHLY RETAINER',m+48,y+3.5);
-      doc.setFontSize(10); doc.setTextColor(232,255,71); doc.text(o.pricing.projectFee,m+6,y+11);
-      doc.setTextColor(71,255,212); doc.text(o.pricing.retainerFee||'N/A',m+46,y+11); y+=18;
-    }
-    y+=4;
-  });
-  if(r.pricingSummary){
-    var ps = r.pricingSummary;
-    secTitle('Pricing Summary');
-    chk(18);
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text('TOTAL PROJECT RANGE',m,y);
-    doc.setFontSize(12); doc.setTextColor(232,255,71);
-    doc.text(ps.totalProjectMin + ' - ' + ps.totalProjectMax,m,y+7);
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text('TOTAL RETAINER RANGE',m+85,y);
-    doc.setFontSize(12); doc.setTextColor(71,255,212);
-    doc.text(ps.totalRetainerMin + ' - ' + ps.totalRetainerMax,m+85,y+7); y+=16;
-    if(ps.recommendation) bodyTxt('Recommendation: ' + ps.recommendation);
-  }
-  secTitle('Implementation Roadmap');
-  r.roadmap.forEach(function(p,i){
-    chk(14);
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(232,255,71);
-    doc.text('0' + (i+1) + '  ' + p.phase + ' -- ' + p.focus, m, y); y+=5;
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(180,180,180);
-    p.items.forEach(function(item){ chk(5); doc.text('->  ' + item,m+6,y); y+=4.5; }); y+=4;
-  });
-  secTitle('Recommended Next Steps'); bodyTxt(r.nextSteps);
-  var tp = doc.internal.getNumberOfPages();
-  for(var pg = 1; pg <= tp; pg++){
-    doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(7);
-    doc.setTextColor(50,50,50);
-    doc.text('AI Opportunity Audit | ' + clientName + ' | ' + date + ' | Page ' + pg + ' of ' + tp, m, 291);
-  }
-  doc.save('AI-Audit-' + clientName.replace(/\s+/g,'-') + '-' + new Date().toISOString().slice(0,10) + '.pdf');
-}
-
-function downloadProposalPDF(){
-  if(!currentProposal) return;
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  generateProposalPDF(currentProposal, currentClientName, currentAgencyName, currentAgencyEmail, date);
-}
-
-function generateProposalPDF(p, clientName, agencyName, agencyEmail, date){
-  var doc = new jspdf.jsPDF({unit:'mm',format:'a4'});
-  var pw = doc.internal.pageSize.getWidth(), m = 18, maxW = pw - m*2;
-  var y = 20;
-  function chk(n){ if(!n) n=12; if(y+n>275){ doc.addPage(); y=20; doc.setFillColor(10,10,16); doc.rect(0,0,pw,297,'F'); } }
-  function secHdr(t,col){ if(!col) col=[232,255,71]; chk(12); doc.setFillColor(col[0],col[1],col[2]); doc.rect(m,y,maxW,6,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0); doc.text(t.toUpperCase(),m+3,y+4.5); y+=10; }
-  function bodyTxt(t,sz){ if(!sz) sz=9; doc.setFont('helvetica','normal'); doc.setFontSize(sz); doc.setTextColor(200,200,200); var lines=doc.splitTextToSize(t,maxW); lines.forEach(function(l){ chk(6); doc.text(l,m,y); y+=5.5; }); y+=2; }
-  doc.setFillColor(10,10,16); doc.rect(0,0,pw,297,'F');
-  drawLogoPDF(doc, pw, m);
-  doc.setFillColor(232,255,71); doc.rect(m,22,32,6,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(0,0,0);
-  doc.text('PROPOSAL',m+2,26.5);
-  doc.setFontSize(22); doc.setTextColor(240,240,240); doc.text(clientName,m,44);
-  doc.setFontSize(11); doc.setTextColor(232,255,71);
-  var tl = doc.splitTextToSize(p.tagline||'',maxW); doc.text(tl,m,54);
-  doc.setFontSize(9); doc.setTextColor(100,100,100);
-  doc.text('Prepared by ' + agencyName + '  |  ' + agencyEmail + '  |  ' + date, m, 54+tl.length*6+4);
-  doc.setDrawColor(34,34,34); doc.line(m,72,pw-m,72); y=82;
-  secHdr('The Opportunity'); bodyTxt(p.problemStatement);
-  secHdr('Our Approach'); bodyTxt(p.ourApproach);
-  if(p.scopeItems && p.scopeItems.length){
-    chk(8); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text('DELIVERABLES',m,y); y+=6;
-    p.scopeItems.forEach(function(item){ chk(6); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(180,180,180); doc.text('->  ' + item,m,y); y+=5; }); y+=4;
-  }
-  if(p.timeline){ chk(8); bodyTxt('Timeline: ' + p.timeline); }
-  secHdr('Investment Options');
-  var aInc = (p.projectOption||{}).includes||[];
-  var bInc = (p.retainerOption||{}).includes||[];
-  var boxH = Math.max(52, 34 + Math.max(aInc.length, bInc.length) * 5);
-  chk(boxH+10);
-  var colW = maxW/2 - 4, bx = m + maxW/2 + 4;
-  doc.setFillColor(26,26,26); doc.rect(m,y,colW,boxH,'F');
-  doc.setFillColor(232,255,71); doc.rect(m,y,colW,6,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(0,0,0);
-  doc.text(('OPTION A -- '+((p.projectOption||{}).title||'Project')).toUpperCase(),m+2,y+4.5);
-  doc.setFontSize(13); doc.setTextColor(232,255,71);
-  doc.text((p.projectOption||{}).price||'',m+2,y+15);
-  var pd = doc.splitTextToSize((p.projectOption||{}).description||'',colW-6);
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160,160,160);
-  doc.text(pd,m+2,y+22);
-  var ay = y+22+pd.length*4.5+2;
-  aInc.forEach(function(inc){ doc.setFontSize(7); doc.setTextColor(120,120,120); var il=doc.splitTextToSize('- '+inc,colW-6); doc.text(il,m+2,ay); ay+=il.length*4; });
-  doc.setFillColor(26,26,26); doc.rect(bx,y,colW,boxH,'F');
-  doc.setFillColor(71,255,212); doc.rect(bx,y,colW,6,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(0,0,0);
-  doc.text(('OPTION B -- '+((p.retainerOption||{}).title||'Retainer')).toUpperCase(),bx+2,y+4.5);
-  doc.setFontSize(13); doc.setTextColor(71,255,212);
-  doc.text((p.retainerOption||{}).price||'',bx+2,y+15);
-  var rd = doc.splitTextToSize((p.retainerOption||{}).description||'',colW-6);
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(160,160,160);
-  doc.text(rd,bx+2,y+22);
-  var by = y+22+rd.length*4.5+2;
-  bInc.forEach(function(inc){ doc.setFontSize(7); doc.setTextColor(120,120,120); var il=doc.splitTextToSize('- '+inc,colW-6); doc.text(il,bx+2,by); by+=il.length*4; });
-  y+=boxH+8;
-  secHdr('Why ' + agencyName); bodyTxt(p.whyUs);
-  if(p.guarantee){ chk(10); doc.setFillColor(20,40,36); doc.rect(m,y,maxW,8,'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(71,255,212); var gl=doc.splitTextToSize('Guarantee: ' + p.guarantee,maxW-6); doc.text(gl,m+3,y+5.5); y+=12; }
-  secHdr('Next Step',[168,85,247]);
-  chk(16); doc.setFillColor(26,20,36); doc.rect(m,y,maxW,14,'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(232,255,71);
-  var cl = doc.splitTextToSize(p.closingLine||'',maxW-6); doc.text(cl,m+3,y+5); y+=16;
-  bodyTxt('To accept: reply to ' + agencyEmail + ' with your preferred option. No payment taken at this stage.');
-  var tp = doc.internal.getNumberOfPages();
-  for(var pg=1;pg<=tp;pg++){
-    doc.setPage(pg); doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(50,50,50);
-    doc.text('Proposal | ' + clientName + ' | ' + agencyName + ' | ' + date + ' | Page ' + pg + ' of ' + tp, m, 291);
-  }
-  doc.save('Proposal-' + clientName.replace(/\s+/g,'-') + '-' + new Date().toISOString().slice(0,10) + '.pdf');
-}
-
-function downloadModalAuditPDF(){
-  if(!modalAuditId) return;
-  var a = getAudits().find(function(x){ return x.id === modalAuditId; });
-  if(!a) return;
-  generateAuditPDF(a.report, a.clientName, a.industry, a.teamSize, a.date);
-}
-function downloadModalProposalPDF(){
-  if(!modalAuditId) return;
-  var a = getAudits().find(function(x){ return x.id === modalAuditId; });
-  if(!a || !a.proposal) return;
-  generateProposalPDF(a.proposal, a.clientName, a.agencyName, a.agencyEmail, a.date);
-}
-function downloadSavedAuditPDF(id){
-  var a = getAudits().find(function(x){ return x.id === id; });
-  if(!a) return;
-  generateAuditPDF(a.report, a.clientName, a.industry, a.teamSize, a.date);
-}
-function downloadSavedProposalPDF(id){
-  var a = getAudits().find(function(x){ return x.id === id; });
-  if(!a || !a.proposal) return;
-  generateProposalPDF(a.proposal, a.clientName, a.agencyName, a.agencyEmail, a.date);
-}
-
-
-// ============================================================
-// REVIEW FIX HELPERS
-// ============================================================
-function selectAllFixes(){
-  document.querySelectorAll('.review-fix-cb').forEach(function(cb){ cb.checked = true; });
-}
-
-function deselectAllFixes(){
-  document.querySelectorAll('.review-fix-cb').forEach(function(cb){ cb.checked = false; });
-}
-
-async function applySelectedFixes(){
-  if(!currentProposal || !window._reviewData) return;
-  var selected = [];
-  document.querySelectorAll('.review-fix-cb:checked').forEach(function(cb){
-    var idx = parseInt(cb.getAttribute('data-idx'));
-    if(window._reviewData.issues[idx]) selected.push(window._reviewData.issues[idx]);
-  });
-  if(!selected.length){
-    document.getElementById('applyFixesMsg').innerHTML = '<div class="error-box">Select at least one fix to apply.</div>';
-    return;
-  }
-  var msgEl = document.getElementById('applyFixesMsg');
-  msgEl.innerHTML = '<div style="color:var(--accent);font-size:11px;">Applying ' + selected.length + ' fix(es)...</div>';
-  var fixList = selected.map(function(f, i){
-    return (i+1) + '. Field: ' + f.field + ' | Fix: ' + f.suggestedFix;
-  }).join('; ');
-  var prompt = 'You are rewriting a proposal for ' + currentClientName + ' to fix specific issues identified in a review.\n\n'
-    + 'CURRENT PROPOSAL:\n' + JSON.stringify(currentProposal) + '\n\n'
-    + 'FIXES TO APPLY:\n' + fixList + '\n\n'
-    + 'Apply ALL the fixes above to the relevant fields of the proposal. Keep everything else exactly the same.\n'
-    + 'Return ONLY the updated proposal as a JSON object with the same structure as the input. No markdown.';
-  try{
-    var raw = await callClaude(prompt, 2500);
-    var updated = JSON.parse(raw);
-    currentProposal = updated;
-    renderProposal(updated, 'proposalContent');
-    msgEl.innerHTML = '<div class="save-msg">' + selected.length + ' fix(es) applied. Proposal updated above.</div>';
-    // Hide review output to prompt re-review
-    setTimeout(function(){
-      document.getElementById('reviewOutput').style.display = 'none';
-      msgEl.innerHTML = '';
-    }, 3000);
-  }catch(err){
-    msgEl.innerHTML = '<div class="error-box">Failed to apply fixes: ' + err.message + '</div>';
-  }
-}
-
 </script>
 </body>
 </html>
