@@ -122,7 +122,7 @@ body::before{
   </div>
   <div class="pw-box">
     <div class="pw-title">ENTER PASSWORD TO ACCESS</div>
-    <input type="password" class="pw-input" id="pwInput" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" onkeydown="if(event.key==='Enter')checkPw()"/>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
     <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
     <div class="pw-error" id="pwError">Incorrect password. Try again.</div>
   </div>
@@ -145,15 +145,15 @@ body::before{
   <!-- WORKFLOW -->
   <div class="workflow">
     <div class="wf-step">Discovery Call</div>
-    <div class="wf-arrow">-></div>
+    <div class="wf-arrow">â†’</div>
     <div class="wf-step active">Tool 1: Audit</div>
-    <div class="wf-arrow">-></div>
+    <div class="wf-arrow">â†’</div>
     <div class="wf-step">Tool 3: Follow-Up</div>
-    <div class="wf-arrow">-></div>
+    <div class="wf-arrow">â†’</div>
     <div class="wf-step">Tool 2: Proposal</div>
-    <div class="wf-arrow">-></div>
+    <div class="wf-arrow">â†’</div>
     <div class="wf-step">Client Accepts</div>
-    <div class="wf-arrow">-></div>
+    <div class="wf-arrow">â†’</div>
     <div class="wf-step">Tool 4: Impl Guide</div>
   </div>
 
@@ -172,19 +172,7 @@ body::before{
         <span class="tool-tag">Report</span>
         <span class="tool-tag">Solutions</span>
       </div>
-      <div class="tool-arrow">-></div>
-    </div>
-
-    <div class="tool-card" onclick="openTool('tool2-proposal.html')">
-      <div class="tool-num">TOOL 02</div>
-      <div class="tool-name">Proposal Generator</div>
-      <div class="tool-desc">Generate a client-ready proposal based on your audit and selected solutions. Includes proposal review to flag issues before sending. Download as PDF.</div>
-      <div class="tool-tags">
-        <span class="tool-tag">Proposal</span>
-        <span class="tool-tag">Review</span>
-        <span class="tool-tag">PDF</span>
-      </div>
-      <div class="tool-arrow">-></div>
+      <div class="tool-arrow">â†’</div>
     </div>
 
     <div class="tool-card" onclick="openTool('tool3-followup.html')">
@@ -196,7 +184,19 @@ body::before{
         <span class="tool-tag">Assumptions</span>
         <span class="tool-tag">Email</span>
       </div>
-      <div class="tool-arrow">-></div>
+      <div class="tool-arrow">â†’</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('tool2-proposal.html')">
+      <div class="tool-num">TOOL 02</div>
+      <div class="tool-name">Proposal Generator</div>
+      <div class="tool-desc">Generate a client-ready proposal based on your audit and selected solutions. Includes proposal review to flag issues before sending. Download as PDF.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Proposal</span>
+        <span class="tool-tag">Review</span>
+        <span class="tool-tag">PDF</span>
+      </div>
+      <div class="tool-arrow">â†’</div>
     </div>
 
     <div class="tool-card" onclick="openTool('tool4-impl.html')">
@@ -209,13 +209,13 @@ body::before{
         <span class="tool-tag">Costs</span>
         <span class="tool-tag">HIPAA</span>
       </div>
-      <div class="tool-arrow">-></div>
+      <div class="tool-arrow">â†’</div>
     </div>
 
   </div>
 
   <div class="hub-footer">
-    Ratova AI Agency Suite &nbsp;.&nbsp; Internal use only &nbsp;.&nbsp; hello@ratovaai.com &nbsp;.&nbsp; ratovaai.com
+    Ratova AI Agency Suite &nbsp;Â·&nbsp; Internal use only &nbsp;Â·&nbsp; hello@ratovaai.com &nbsp;Â·&nbsp; ratovaai.com
   </div>
 </div>
 
@@ -227,7 +227,6 @@ function checkPw(){
   if(val === PASSWORD){
     document.getElementById('pwScreen').style.display='none';
     document.getElementById('hub').style.display='block';
-    // Store auth in sessionStorage so tools don't need password again in same session
     sessionStorage.setItem('ratova_auth','1');
     loadAuditBanner();
   } else {
@@ -236,24 +235,38 @@ function checkPw(){
   }
 }
 
+function escapeHtml(str){
+  if(str===null||str===undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 function loadAuditBanner(){
   var saved = localStorage.getItem('ratova_current_audit');
   var banner = document.getElementById('auditBanner');
   if(saved){
-    var audit = JSON.parse(saved);
-    var solutions = (audit.solutions||[]).filter(function(s){return s.selected;});
-    banner.innerHTML = '<div class="audit-banner">'
-      +'<div class="audit-banner-left">'
-        +'<div class="audit-dot"></div>'
-        +'<div class="audit-info">'
-          +'<div class="audit-client">'+audit.clientName+'</div>'
-          +'<div class="audit-meta">'+audit.industry+' &nbsp;.&nbsp; '+audit.date+' &nbsp;.&nbsp; '+solutions.length+' solutions selected</div>'
+    try{
+      var audit = JSON.parse(saved);
+      var solutions = (audit.solutions||[]).filter(function(s){return s.selected;});
+      banner.innerHTML = '<div class="audit-banner">'
+        +'<div class="audit-banner-left">'
+          +'<div class="audit-dot"></div>'
+          +'<div class="audit-info">'
+            +'<div class="audit-client">'+escapeHtml(audit.clientName||'Unknown client')+'</div>'
+            +'<div class="audit-meta">'+escapeHtml(audit.industry||'')+' &nbsp;Â·&nbsp; '+escapeHtml(audit.date||'')+' &nbsp;Â·&nbsp; '+solutions.length+' solutions selected</div>'
+          +'</div>'
         +'</div>'
-      +'</div>'
-      +'<button class="audit-clear" onclick="clearAudit()">Clear audit</button>'
-      +'</div>';
+        +'<button class="audit-clear" onclick="clearAudit()">Clear audit</button>'
+        +'</div>';
+    } catch(err){
+      banner.innerHTML = '<div class="no-audit-banner">Could not read saved audit Â· Start with Tool 1 to run a fresh audit</div>';
+    }
   } else {
-    banner.innerHTML = '<div class="no-audit-banner">No audit loaded &nbsp;.&nbsp; Start with Tool 1 to run your first audit</div>';
+    banner.innerHTML = '<div class="no-audit-banner">No audit loaded &nbsp;Â·&nbsp; Start with Tool 1 to run your first audit</div>';
   }
 }
 
