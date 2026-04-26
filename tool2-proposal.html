@@ -54,7 +54,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .pricing-input-group input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-size:13px;outline:none;font-family:var(--font-mono);}
 .pricing-input-group input:focus{border-color:var(--accent2);}
 .pricing-help{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:2px;}
-.calc-summary{background:var(--bg);border:1px solid var(--border);padding:14px;margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.calc-summary{background:var(--bg);border:1px solid var(--border);padding:14px;margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .calc-cell{}
 .calc-lbl{font-size:9px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;margin-bottom:4px;}
 .calc-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
@@ -338,26 +338,35 @@ function renderSolutionsTable(){
     document.getElementById('solutionsTableContainer').innerHTML='<div class="warn-box">No solutions selected. Go back to Tool 1 and confirm at least one solution.</div>';
     return;
   }
-  var html = '<table class="solutions-table"><thead><tr>'
+  var html = '<div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-bottom:8px;line-height:1.5;">Hours auto-fill from the audit estimates - build hours for BUILD rows, procure config hours for PROCURE rows. For procure rows, also enter the monthly tool subscription cost (client pays directly to vendor, separate from your project fee).</div>';
+  html += '<table class="solutions-table"><thead><tr>'
     +'<th>Solution</th>'
     +'<th>Method</th>'
     +'<th style="text-align:right;">Min Hours</th>'
     +'<th style="text-align:right;">Max Hours</th>'
-    +'<th style="text-align:right;">Min Cost</th>'
-    +'<th style="text-align:right;">Max Cost</th>'
+    +'<th style="text-align:right;">Min Fee</th>'
+    +'<th style="text-align:right;">Max Fee</th>'
+    +'<th style="text-align:right;">Tool $/mo</th>'
     +'</tr></thead><tbody>';
 
   solutions.forEach(function(sol, i){
-    var hrs = parseHours(sol.estimatedBuildHours);
-    sol._minHours = sol._minHours !== undefined ? sol._minHours : hrs.min;
-    sol._maxHours = sol._maxHours !== undefined ? sol._maxHours : hrs.max;
-    html += '<tr>'
-      +'<td style="color:var(--text);max-width:280px;white-space:normal;">'+escapeHtml(sol.title||'')+'</td>'
+    syncSolutionHoursToMethod(sol);
+    var subSaved = loadToolPrice(sol.title);
+    if(sol._toolMonthly === undefined){
+      sol._toolMonthly = subSaved!==null ? subSaved : 0;
+    }
+    var subDisplay = sol.method==='procure'
+      ? '<input type="number" min="0" step="10" value="'+sol._toolMonthly+'" oninput="updateToolPrice('+i+',this.value)" style="width:90px;"/>'
+      : '<span style="color:var(--muted);font-size:10px;">N/A</span>';
+
+    html += '<tr id="row-sol-'+i+'">'
+      +'<td style="color:var(--text);max-width:240px;white-space:normal;">'+escapeHtml(sol.title||'')+'</td>'
       +'<td><span style="font-size:9px;font-family:\'Syne\',sans-serif;font-weight:700;letter-spacing:1px;color:'+(sol.method==='procure'?'var(--accent2)':'var(--accent)')+';">'+(sol.method==='procure'?'PROCURE':'BUILD')+'</span></td>'
       +'<td style="text-align:right;"><input type="number" min="0" step="1" value="'+sol._minHours+'" oninput="updateHours('+i+',\'min\',this.value)"/></td>'
       +'<td style="text-align:right;"><input type="number" min="0" step="1" value="'+sol._maxHours+'" oninput="updateHours('+i+',\'max\',this.value)"/></td>'
       +'<td style="text-align:right;" id="minCost-'+i+'">$0</td>'
       +'<td style="text-align:right;" id="maxCost-'+i+'">$0</td>'
+      +'<td style="text-align:right;">'+subDisplay+'</td>'
       +'</tr>';
   });
 
@@ -366,15 +375,57 @@ function renderSolutionsTable(){
     +'<td style="text-align:right;" id="totalMaxHours">0</td>'
     +'<td style="text-align:right;color:var(--accent);" id="totalMinCost">$0</td>'
     +'<td style="text-align:right;color:var(--accent);" id="totalMaxCost">$0</td>'
+    +'<td style="text-align:right;color:var(--accent2);" id="totalToolMonthly">$0/mo</td>'
     +'</tr>';
   html += '</tbody></table>';
   document.getElementById('solutionsTableContainer').innerHTML = html;
+}
+
+// Pull the right hour estimate based on method - build vs procure
+function syncSolutionHoursToMethod(sol){
+  var sourceField = sol.method==='procure' ? 'estimatedProcureConfigHours' : 'estimatedBuildHours';
+  // If the operator hasn't manually edited hours yet, sync from audit estimate
+  // Track whether they've edited via _hoursManuallyEdited flag
+  if(!sol._hoursManuallyEdited){
+    var hrs = parseHours(sol[sourceField]);
+    sol._minHours = hrs.min;
+    sol._maxHours = hrs.max;
+  }
+}
+
+function updateToolPrice(i, val){
+  var solutions = (currentAudit.solutions||[]).filter(function(s){return s.selected;});
+  var sol = solutions[i];
+  if(!sol) return;
+  sol._toolMonthly = parseFloat(val)||0;
+  saveToolPrice(sol.title, sol._toolMonthly);
+  recalculatePricing();
+}
+
+// Tool price library - localStorage cache so repeat tools autofill
+function loadToolPrice(toolTitle){
+  try{
+    var lib = JSON.parse(localStorage.getItem('ratova_tool_prices')||'{}');
+    var key = (toolTitle||'').toLowerCase().trim();
+    return lib[key] && lib[key].price !== undefined ? lib[key].price : null;
+  }catch(err){ return null; }
+}
+
+function saveToolPrice(toolTitle, price){
+  if(!toolTitle) return;
+  try{
+    var lib = JSON.parse(localStorage.getItem('ratova_tool_prices')||'{}');
+    var key = toolTitle.toLowerCase().trim();
+    lib[key] = {price: price, lastVerified: new Date().toISOString()};
+    localStorage.setItem('ratova_tool_prices', JSON.stringify(lib));
+  }catch(err){ /* quota or parse fail - silent */ }
 }
 
 function updateHours(i, which, val){
   var solutions = (currentAudit.solutions||[]).filter(function(s){return s.selected;});
   var sol = solutions[i];
   if(!sol) return;
+  sol._hoursManuallyEdited = true;
   if(which==='min') sol._minHours = parseFloat(val)||0;
   else sol._maxHours = parseFloat(val)||0;
   recalculatePricing();
@@ -385,7 +436,7 @@ function recalculatePricing(){
   var retainerPct = parseFloat(document.getElementById('retainerPct').value)||12;
   var solutions = (currentAudit && currentAudit.solutions||[]).filter(function(s){return s.selected;});
 
-  var totalMin = 0, totalMax = 0, totalMinHrs = 0, totalMaxHrs = 0;
+  var totalMin = 0, totalMax = 0, totalMinHrs = 0, totalMaxHrs = 0, totalToolMonthly = 0;
   solutions.forEach(function(sol, i){
     var minHrs = sol._minHours||0;
     var maxHrs = sol._maxHours||0;
@@ -395,6 +446,9 @@ function recalculatePricing(){
     totalMax += maxCost;
     totalMinHrs += minHrs;
     totalMaxHrs += maxHrs;
+    if(sol.method === 'procure'){
+      totalToolMonthly += (sol._toolMonthly||0);
+    }
     var minEl = document.getElementById('minCost-'+i);
     var maxEl = document.getElementById('maxCost-'+i);
     if(minEl) minEl.textContent = fmtMoney(minCost);
@@ -405,10 +459,12 @@ function recalculatePricing(){
   var thMax = document.getElementById('totalMaxHours');
   var tcMin = document.getElementById('totalMinCost');
   var tcMax = document.getElementById('totalMaxCost');
+  var ttMonthly = document.getElementById('totalToolMonthly');
   if(thMin) thMin.textContent = totalMinHrs;
   if(thMax) thMax.textContent = totalMaxHrs;
   if(tcMin) tcMin.textContent = fmtMoney(totalMin);
   if(tcMax) tcMax.textContent = fmtMoney(totalMax);
+  if(ttMonthly) ttMonthly.textContent = fmtMoney(totalToolMonthly)+'/mo';
 
   var retainerMin = totalMin * retainerPct / 100;
   var retainerMax = totalMax * retainerPct / 100;
@@ -416,8 +472,13 @@ function recalculatePricing(){
   var roiSummary = calculateROI(totalMin, totalMax);
 
   document.getElementById('calcSummary').innerHTML =
-    '<div class="calc-cell"><div class="calc-lbl">PROJECT RANGE</div><div class="calc-val project">'+fmtMoney(totalMin)+(totalMin!==totalMax?' - '+fmtMoney(totalMax):'')+'</div></div>'
+    '<div class="calc-cell"><div class="calc-lbl">PROJECT FEE (RATOVA)</div><div class="calc-val project">'+fmtMoney(totalMin)+(totalMin!==totalMax?' - '+fmtMoney(totalMax):'')+'</div></div>'
     +'<div class="calc-cell"><div class="calc-lbl">RETAINER ('+retainerPct+'% / MO)</div><div class="calc-val retainer">'+fmtMoney(retainerMin)+(retainerMin!==retainerMax?' - '+fmtMoney(retainerMax):'')+'/mo</div></div>'
+    +'<div class="calc-cell"><div class="calc-lbl">CLIENT TOOL COSTS</div>'
+    +(totalToolMonthly > 0
+      ?'<div class="calc-val" style="color:var(--accent2);">'+fmtMoney(totalToolMonthly)+'/mo</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">paid to vendors, not Ratova</div>'
+      :'<div class="calc-val placeholder">$0/mo (no procure)</div>')
+    +'</div>'
     +'<div class="calc-cell"><div class="calc-lbl">ANNUAL ROI</div>'
     +(roiSummary.complete
       ?'<div class="calc-val roi">'+fmtMoney(roiSummary.annualValue)+' / '+roiSummary.multiple+'x</div>'
@@ -547,10 +608,11 @@ async function generateProposal(){
 
   var rate = parseFloat(document.getElementById('hourlyRate').value)||150;
   var retainerPct = parseFloat(document.getElementById('retainerPct').value)||12;
-  var totalMin = 0, totalMax = 0;
+  var totalMin = 0, totalMax = 0, totalToolMonthly = 0;
   solutions.forEach(function(s){
     totalMin += (s._minHours||0) * rate;
     totalMax += (s._maxHours||0) * rate;
+    if(s.method === 'procure') totalToolMonthly += (s._toolMonthly||0);
   });
   var retainerMin = totalMin * retainerPct / 100;
   var retainerMax = totalMax * retainerPct / 100;
@@ -611,7 +673,8 @@ async function generateProposal(){
     proposal._pricing = {
       totalMin: totalMin, totalMax: totalMax,
       retainerMin: retainerMin, retainerMax: retainerMax,
-      retainerPct: retainerPct, hourlyRate: rate
+      retainerPct: retainerPct, hourlyRate: rate,
+      totalToolMonthly: totalToolMonthly
     };
     proposal._roi = roiSummary;
     currentProposal = proposal;
@@ -669,11 +732,11 @@ function renderProposal(p){
     ? fmtMoney(p._pricing.retainerMin)+'/mo'
     : fmtMoney(p._pricing.retainerMin)+' - '+fmtMoney(p._pricing.retainerMax)+'/mo';
   html += '<div class="option-card" style="border-color:var(--accent);">'
-    +'<div class="option-title" style="color:var(--accent);">PROJECT â€” ONE-TIME BUILD</div>'
+    +'<div class="option-title" style="color:var(--accent);">PROJECT FEE â€” RATOVA AI</div>'
     +'<div class="option-price" style="color:var(--accent);">'+projectRange+'</div>'
-    +'<div class="option-desc">Complete delivery of all '+solutions.length+' selected solutions. Includes setup, integration, testing, and handover.</div>'
+    +'<div class="option-desc">Complete delivery of all '+solutions.length+' selected solutions. Includes setup, integration, configuration, testing, and handover.</div>'
     +'<ul class="option-includes">'
-    +solutions.slice(0,4).map(function(s){return '<li>'+escapeHtml(s.title||'')+'</li>';}).join('')
+    +solutions.slice(0,4).map(function(s){return '<li>'+escapeHtml(s.title||'')+(s.method==='procure'?' (configuration)':'')+'</li>';}).join('')
     +'</ul>'
     +'</div>';
   html += '<div class="option-card" style="border-color:var(--accent2);">'
@@ -686,7 +749,17 @@ function renderProposal(p){
     +'<li>Quarterly strategy reviews</li>'
     +'</ul>'
     +'</div>';
-  html += '</div></div>';
+  html += '</div>';
+
+  // Client-paid tool subscriptions - only shown when there are procure solutions
+  if(p._pricing.totalToolMonthly > 0){
+    html += '<div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border);padding:14px 18px;">'
+      +'<div style="font-size:9px;letter-spacing:1.5px;color:var(--accent2);font-family:\'Syne\',sans-serif;font-weight:700;margin-bottom:6px;">PLUS: TOOL SUBSCRIPTIONS â€” PAID DIRECTLY BY CLIENT</div>'
+      +'<div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent2);margin-bottom:6px;">'+fmtMoney(p._pricing.totalToolMonthly)+'/mo (estimated)</div>'
+      +'<div style="font-size:11px;color:var(--muted);line-height:1.6;">Some solutions use off-the-shelf tools that the client subscribes to directly. These costs are paid to the vendors, not to Ratova AI, and are separate from the project fee above. Specific tools and pricing confirmed during implementation.</div>'
+      +'</div>';
+  }
+  html += '</div>';
 
   html += '<div class="proposal-section"><div class="proposal-section-title">WHY RATOVA AI</div><div class="proposal-text">'+escapeHtml(safeStr(p.whyUs))+'</div></div>';
   html += '<div class="proposal-section"><div class="proposal-section-title">GUARANTEE</div><div class="proposal-text" style="color:var(--accent2);">'+escapeHtml(safeStr(p.guarantee))+'</div></div>';
@@ -782,8 +855,9 @@ function copyProposal(){
     +'OUR APPROACH\n'+safeStr(p.ourApproach)+'\n\n'
     +'DELIVERABLES\n'+(p.scopeItems||[]).map(function(s,i){return (i+1)+'. '+safeStr(s);}).join('\n')+'\n\n'
     +'TIMELINE: '+safeStr(p.timeline)+roiText+'\n\n'
-    +'INVESTMENT\nProject: '+projectRange+'\nRetainer: '+retainerRange+' ('+p._pricing.retainerPct+'% of project)\n\n'
-    +'WHY RATOVA AI\n'+safeStr(p.whyUs)+'\n\n'
+    +'INVESTMENT\nProject fee (Ratova AI): '+projectRange+'\nRetainer: '+retainerRange+' ('+p._pricing.retainerPct+'% of project)\n'
+    +(p._pricing.totalToolMonthly > 0 ? 'Tool subscriptions (paid by client to vendors): '+fmtMoney(p._pricing.totalToolMonthly)+'/mo (estimated)\n' : '')
+    +'\nWHY RATOVA AI\n'+safeStr(p.whyUs)+'\n\n'
     +'GUARANTEE\n'+safeStr(p.guarantee)+'\n\n'
     +safeStr(p.closingLine)+'\n\nReply to '+SENDER.email+' to accept.';
   navigator.clipboard.writeText(text);
@@ -882,11 +956,11 @@ function downloadProposalPDF(){
   doc.setFillColor(18,18,28);doc.rect(m,y,colW,boxH,'F');
   doc.setFillColor(225,29,72);doc.rect(m,y,colW,5,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(255,255,255);
-  doc.text('PROJECT â€” ONE-TIME BUILD',m+2,y+3.8);
+  doc.text('PROJECT FEE â€” RATOVA AI',m+2,y+3.8);
   doc.setFontSize(12);doc.setTextColor(225,29,72);doc.text(projectRange,m+2,y+13);
   doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(130,130,150);
   doc.text('Complete delivery of all selected solutions',m+2,y+20);
-  doc.text('Includes setup, integration, testing, handover',m+2,y+25);
+  doc.text('Includes setup, integration, configuration, handover',m+2,y+25);
 
   doc.setFillColor(18,18,28);doc.rect(bx,y,colW,boxH,'F');
   doc.setFillColor(59,130,246);doc.rect(bx,y,colW,5,'F');
@@ -897,6 +971,22 @@ function downloadProposalPDF(){
   doc.text('Monthly review, tuning, priority support',bx+2,y+20);
   doc.text('Quarterly strategy reviews',bx+2,y+25);
   y+=boxH+8;
+
+  // Client-paid tool subscriptions (only if any procure solutions exist)
+  if(p._pricing.totalToolMonthly > 0){
+    chk(28);
+    doc.setFillColor(20,20,30);doc.rect(m,y,maxW,24,'F');
+    doc.setDrawColor(59,130,246);doc.setLineWidth(0.5);doc.line(m,y,m,y+24);
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(59,130,246);
+    doc.setCharSpace(1.2);
+    doc.text('PLUS: TOOL SUBSCRIPTIONS â€” PAID DIRECTLY BY CLIENT',m+4,y+5);
+    doc.setCharSpace(0);
+    doc.setFontSize(11);doc.text(fmtMoney(p._pricing.totalToolMonthly)+'/mo (estimated)',m+4,y+12);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(130,130,150);
+    var noteLines = doc.splitTextToSize('Some solutions use off-the-shelf tools the client subscribes to directly. These are paid to vendors, separate from the Ratova fee. Specific tools confirmed during implementation.', maxW-8);
+    doc.text(noteLines,m+4,y+18);
+    y += 28;
+  }
 
   secHdr('Why Ratova AI');
   addLine(p.whyUs,9,[160,160,180],false,0);y+=2;
