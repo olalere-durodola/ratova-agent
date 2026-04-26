@@ -160,6 +160,20 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .rec-rationale{flex-basis:100%;background:var(--surface2);border-left:2px solid var(--accent2);padding:10px 12px;font-size:11px;color:var(--muted);font-family:var(--font-mono);line-height:1.6;margin-top:4px;}
 .rec-mismatch{margin-top:6px;font-size:10px;font-family:var(--font-mono);color:var(--yellow);background:rgba(234,179,8,0.05);border:1px dashed var(--yellow);padding:6px 10px;}
 
+/* Recommended tools panel */
+.rec-tools{margin-top:10px;background:var(--bg);border:1px solid var(--border);padding:10px 12px;}
+.rec-tools-label{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;color:var(--accent2);margin-bottom:8px;}
+.rec-tool-item{padding:8px 10px;border-left:2px solid var(--border);margin-bottom:6px;background:var(--surface2);}
+.rec-tool-item.top-pick{border-left-color:var(--green);}
+.rec-tool-item:last-child{margin-bottom:0;}
+.rec-tool-name{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--text);margin-bottom:2px;}
+.rec-tool-pick{font-size:8px;background:var(--green);color:#000;padding:1px 5px;font-weight:700;letter-spacing:1px;margin-left:6px;}
+.rec-tool-desc{font-size:11px;color:var(--muted);font-family:var(--font-mono);line-height:1.5;margin-bottom:4px;}
+.rec-tool-pros,.rec-tool-cons{font-size:10px;font-family:var(--font-mono);line-height:1.5;}
+.rec-tool-pros{color:var(--green);}
+.rec-tool-cons{color:var(--accent);}
+.rec-tool-prosconslabel{font-weight:700;margin-right:4px;}
+
 .procure-summary{background:var(--surface);border:1px solid var(--border);padding:14px 20px;margin-bottom:16px;display:flex;gap:24px;}
 .procure-stat{display:flex;flex-direction:column;gap:2px;}
 .procure-stat-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
@@ -526,7 +540,8 @@ async function startAnalysis(){
       + '   - HYBRID when: procure the core and build a differentiating layer on top, OR build the integration layer and procure the engines.\n'
       + '   For each recommendation include 2-3 sentences of rationale citing the specific factors that apply to THIS client, not generic theory. Set confidence: High when the category is mature and the fit is clear, Medium when there are tradeoffs either way, Low when you genuinely do not know enough to recommend confidently.\n'
       + '8. ESTIMATE BOTH HOUR PATHS: For each opportunity provide BOTH estimatedBuildHours (hours to build from scratch) AND estimatedProcureConfigHours (hours to configure and integrate an off-the-shelf tool). Procure config hours are typically 20-40 percent of build hours but use your judgment. If procure is genuinely impossible (no category exists), set estimatedProcureConfigHours to null and procureToolCategory to null.\n'
-      + '9. Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n\n'
+      + '9. RECOMMENDED TOOLS: For any opportunity where recommendedMethod is procure or hybrid, provide 2-3 specific named tool recommendations in recommendedTools. Name actual products (e.g. ModMed, AdvancedMD, Practice Fusion - not "scheduling software"). Mark exactly one as topPick:true based on best fit for THIS client given their constraints. For each tool include 2-3 pros and 1-2 cons specific to this client situation. If recommendedMethod is build, set recommendedTools to an empty array. ACKNOWLEDGE that tool names and pricing may have changed since training - the operator must verify.\n'
+      + '10. Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n\n'
       + 'Return ONLY valid JSON (no markdown). Keep each text field to 2-3 sentences max where applicable. All array fields must contain strings, not objects, unless the schema below explicitly shows an object structure.\n'
       + '{'
       + '"executiveSummary":"2-3 sentence overview capturing the most critical findings",'
@@ -541,7 +556,7 @@ async function startAnalysis(){
       + '"assumptions":["what is being assumed not explicitly stated - as plain strings"],'
       + '"roiInputsNeeded":[{"input":"name of the quantitative input needed","whyItMatters":"why this input drives ROI","source":"client interview | internal data | industry benchmark with source"}],'
       + '"pricingFactors":{"solutionCount":"number of distinct solutions identified","complexityNotes":"qualitative complexity assessment - what makes this engagement simple or hard","integrationRequirements":["specific systems requiring integration"],"complianceLevel":"none | standard | high (HIPAA / SOC2 / etc with specifics)","timelineFactors":"what affects how long this takes - urgency, dependencies, blockers"},'
-      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high|medium|low","effort":"high|medium|low","estimatedBuildHours":"hours to build from scratch - range or single number","estimatedProcureConfigHours":"hours to configure off-the-shelf tool - range or single number, or null if procure not viable","procureToolCategory":"category of off-the-shelf tool that could replace this build, or null if must-build","recommendedMethod":"build|procure|hybrid","recommendationRationale":"2-3 sentences citing this client specific factors","recommendationConfidence":"High|Medium|Low"}],'
+      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high|medium|low","effort":"high|medium|low","estimatedBuildHours":"hours to build from scratch - range or single number","estimatedProcureConfigHours":"hours to configure off-the-shelf tool - range or single number, or null if procure not viable","procureToolCategory":"category of off-the-shelf tool that could replace this build, or null if must-build","recommendedMethod":"build|procure|hybrid","recommendationRationale":"2-3 sentences citing this client specific factors","recommendationConfidence":"High|Medium|Low","recommendedTools":[{"name":"specific product name","description":"one line on what it does and why it fits THIS client","pros":["pro 1","pro 2","pro 3"],"cons":["con 1","con 2"],"topPick":true|false}]}],'
       + '"roadmap":{"phase1":{"title":"0-30 days","items":["specific item referencing tools or facts from signals"]},"phase2":{"title":"30-90 days","items":["specific item"]},"phase3":{"title":"90+ days","items":["specific item"]}},'
       + '"nextSteps":"specific recommended actions"'
       + '}';
@@ -708,6 +723,7 @@ function goToSolutions(){
       recommendedMethod:o.recommendedMethod,
       recommendationRationale:o.recommendationRationale,
       recommendationConfidence:o.recommendationConfidence,
+      recommendedTools:o.recommendedTools||[],
       selected:true,
       method: defaultMethod
     };
@@ -741,6 +757,22 @@ function renderSolutions(){
     // Mismatch warning - shown when operator overrides the recommendation
     var mismatchHtml = '<div class="rec-mismatch" id="rec-mismatch-'+i+'" style="display:none;">Override active &middot; you have selected a different method than recommended</div>';
 
+    // Recommended tools list for procure/hybrid solutions
+    var toolsHtml = '';
+    if(sol.recommendedTools && sol.recommendedTools.length){
+      toolsHtml = '<div class="rec-tools" id="rec-tools-'+i+'">'
+        +'<div class="rec-tools-label">RECOMMENDED TOOLS &middot; verify pricing before quoting</div>';
+      sol.recommendedTools.forEach(function(t){
+        toolsHtml += '<div class="rec-tool-item'+(t.topPick?' top-pick':'')+'">'
+          +'<div class="rec-tool-name">'+escapeHtml(safeStr(t.name||''))+(t.topPick?' <span class="rec-tool-pick">TOP PICK</span>':'')+'</div>'
+          +(t.description?'<div class="rec-tool-desc">'+escapeHtml(safeStr(t.description))+'</div>':'')
+          +(t.pros && t.pros.length?'<div class="rec-tool-pros"><span class="rec-tool-prosconslabel">+</span>'+t.pros.map(function(p){return escapeHtml(safeStr(p));}).join(' &middot; ')+'</div>':'')
+          +(t.cons && t.cons.length?'<div class="rec-tool-cons"><span class="rec-tool-prosconslabel">-</span>'+t.cons.map(function(c){return escapeHtml(safeStr(c));}).join(' &middot; ')+'</div>':'')
+          +'</div>';
+      });
+      toolsHtml += '</div>';
+    }
+
     div.innerHTML = 
       '<div class="solution-left">'
         +'<div class="solution-check '+(sol.selected?'checked':'')+'" onclick="toggleSolution('+i+')" id="check-'+i+'"></div>'
@@ -750,6 +782,7 @@ function renderSolutions(){
           +'<div class="solution-pain">Pain: '+escapeHtml(sol.painPoint||'')+'</div>'
           +recBadgeHtml
           +mismatchHtml
+          +toolsHtml
           +'<div class="solution-edit-area" id="edit-area-'+i+'">'
             +'<textarea id="edit-ta-'+i+'">'+escapeHtml(sol.desc||'')+'</textarea>'
             +'<button class="save-edit-btn" onclick="saveEdit('+i+')">Save</button>'
