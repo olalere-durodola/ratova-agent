@@ -96,10 +96,38 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .signal-list,.pain-list{list-style:none;}
 .signal-list li,.pain-list li{font-size:12px;font-family:var(--font-mono);color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;}
 .signal-list li::before{content:'->';color:var(--accent);flex-shrink:0;}
+
+/* PAIN POINT CARDS */
+.pain-card{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 16px;margin-bottom:10px;}
+.pain-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.pain-severity{font-size:9px;font-weight:700;letter-spacing:1.5px;font-family:'Syne',sans-serif;padding:2px 8px;}
+.pain-severity.high{background:rgba(225,29,72,0.15);color:var(--accent);border:1px solid var(--accent);}
+.pain-severity.medium{background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid var(--yellow);}
+.pain-severity.low{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid var(--green);}
+.pain-statement{font-size:13px;color:var(--text);font-weight:500;margin-bottom:6px;line-height:1.5;}
+.pain-impact{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:6px;}
+.pain-impact-label{font-size:9px;color:var(--accent2);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;margin-right:6px;}
+.pain-evidence{font-size:11px;color:var(--muted);font-family:var(--font-mono);font-style:italic;padding-top:6px;border-top:1px dashed var(--border);}
+.pain-evidence-label{font-size:9px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;margin-right:6px;}
+
+/* LEAD ANGLE */
+.lead-angle-card{background:var(--surface);border:1px solid var(--accent);border-left:4px solid var(--accent);padding:16px 20px;}
+.lead-angle-text{font-size:13px;color:var(--text);line-height:1.6;}
+
+/* ROI WITH CONFIDENCE */
 .roi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .roi-card{background:var(--bg);border:1px solid var(--border);padding:14px;}
 .roi-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent2);}
 .roi-lbl{font-size:10px;color:var(--muted);margin-top:4px;}
+.confidence-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;font-family:'Syne',sans-serif;padding:3px 10px;margin-top:8px;}
+.confidence-badge.high{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid var(--green);}
+.confidence-badge.medium{background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid var(--yellow);}
+.confidence-badge.low{background:rgba(225,29,72,0.15);color:var(--accent);border:1px solid var(--accent);}
+.assumptions-list{margin-top:10px;font-size:11px;font-family:var(--font-mono);color:var(--muted);}
+.assumptions-list-label{font-size:9px;color:var(--yellow);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;margin-bottom:6px;}
+.assumptions-list ul{list-style:none;}
+.assumptions-list li{padding:3px 0;display:flex;gap:6px;}
+.assumptions-list li::before{content:'?';color:var(--yellow);flex-shrink:0;}
 
 /* SOLUTION CHECKLIST */
 .solution-item{background:var(--surface);border:1px solid var(--border);padding:16px 20px;margin-bottom:10px;display:flex;align-items:flex-start;gap:16px;}
@@ -284,6 +312,17 @@ var currentIndustry = '';
 var currentTeamSize = '';
 var currentSolutions = [];
 
+// HTML escape utility - prevents XSS when rendering AI output
+function escapeHtml(str){
+  if(str===null||str===undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 function checkPw(){
   var val = document.getElementById('pwInput').value;
   if(val === PASSWORD){
@@ -332,11 +371,11 @@ async function runLogs(logs, containerId){
   for(var i=0;i<logs.length;i++){
     var item = document.createElement('div');
     item.className='log-item active';
-    item.innerHTML='<div class="log-dot"></div>'+logs[i];
+    item.innerHTML='<div class="log-dot"></div>'+escapeHtml(logs[i]);
     el.appendChild(item);
     await sleep(280);
     item.className='log-item done';
-    item.innerHTML='<div class="log-dot"></div>'+logs[i];
+    item.innerHTML='<div class="log-dot"></div>'+escapeHtml(logs[i]);
   }
 }
 
@@ -359,8 +398,15 @@ async function callClaude(prompt, maxTokens){
   if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
   if(!data.content) throw new Error('No content returned. Check your API key.');
   var raw = data.content.map(function(i){return i.text||'';}).join('');
-  var cleaned = raw.replace(/[`]{3}json/g,'').replace(/[`]{3}/g,'').trim();
-  return JSON.parse(cleaned);
+  // Try to extract JSON object even if model adds preamble
+  var jsonMatch = raw.match(/\{[\s\S]*\}/);
+  var cleaned = jsonMatch ? jsonMatch[0] : raw.replace(/[`]{3}json/g,'').replace(/[`]{3}/g,'').trim();
+  try{
+    return JSON.parse(cleaned);
+  }catch(parseErr){
+    console.error('JSON parse failed. Raw response:', raw);
+    throw new Error('JSON parse failed: '+parseErr.message+'. Check console for raw response.');
+  }
 }
 
 async function startAnalysis(){
@@ -383,7 +429,7 @@ async function startAnalysis(){
   setPanel(2);
 
   var LOGS_P1=['Reading transcript structure...','Identifying repetition signals...','Mapping tool stack & integrations...','Detecting workflow bottlenecks...','Flagging manual data transfers...','Extracting time & cost indicators...','Compiling raw signal findings...'];
-  var LOGS_P2=['Scoring opportunity impact...','Calculating ROI estimates...','Building opportunity matrix...','Generating implementation roadmap...','Finalising audit report...'];
+  var LOGS_P2=['Scoring opportunity impact...','Calculating ROI estimates...','Building opportunity matrix...','Generating implementation roadmap...','Identifying lead angle...','Finalising audit report...'];
 
   try{
     document.getElementById('procTitle').textContent='Stage 1 of 2 -- Extracting Signals';
@@ -401,7 +447,7 @@ async function startAnalysis(){
       + '- Capture exact numbers, timeframes, and figures mentioned (hours, percentages, costs)\n'
       + '- Note anything that would affect how a solution is designed or delivered\n'
       + '- Capture any business goals, expansion plans, or partnership ideas mentioned\n'
-      + '- Flag anything that was tried before and failed, including why\n'
+      + '- For failed attempts: capture what was tried, why it failed, and the implication for solution design. If only one prior attempt is mentioned, explicitly note that the operator should ask the client about other prior attempts before designing solutions.\n'
       + '- Note any legal, regulatory, or compliance constraints mentioned\n'
       + '- Capture the customer or patient demographic if mentioned\n\n'
       + 'Return ONLY valid JSON (no markdown). Structure the output based on what the transcript actually contains:\n'
@@ -410,7 +456,7 @@ async function startAnalysis(){
       + '"toolStack":["every tool, software, or system mentioned by name"],'
       + '"painPoints":["specific pain with its business impact and any numbers mentioned"],'
       + '"constraints":["anything that limits or blocks a solution - legal, technical, regulatory, demographic"],'
-      + '"failedAttempts":["anything already tried that did not work and why"],'
+      + '"failedAttempts":["anything already tried that did not work, why it failed, and what this implies for solution design - if only one is found, add an entry noting the operator should ask the client about other prior attempts"],'
       + '"revenueRisks":["specific risks to revenue, clients, or key relationships"],'
       + '"opportunities":["automation or improvement opportunities identified from the transcript"],'
       + '"expansionGoals":"any mention of scaling, expanding, or growing the solution",'
@@ -431,33 +477,39 @@ async function startAnalysis(){
     var p2 = 'You are an expert AI agency consultant. Based on ALL the extracted signals below, produce a comprehensive AI Opportunity Audit Report. Every point from the transcript should inform this report. All prices in USD.\n\n'
       + 'CLIENT: ' + clientName + '\nINDUSTRY: ' + industry + '\nTEAM SIZE: ' + (teamSize||'Unknown') + '\n\n'
       + 'ALL EXTRACTED SIGNALS:\n' + JSON.stringify(signals) + '\n\n'
-      + 'Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n'
-      + 'Return ONLY valid JSON (no markdown). Keep each text field to 2-3 sentences max. Total under 5000 tokens.\n'
+      + 'CRITICAL INSTRUCTIONS - read these before generating output:\n'
+      + '1. PAIN POINTS: Produce 8-12 pain points minimum. Each pain point must include downstream business impact (the chain of consequence) and specific transcript evidence. Do not collapse multiple distinct pains into one entry. If one root cause produces multiple downstream effects (e.g. manual call handling causing both patient frustration AND referring doctor attrition), list them as separate pain points with different severity ratings.\n'
+      + '2. ROI: Numeric ranges must not exceed 25 percent spread. $75k-$95k is acceptable. $75k-$150k is not. If the transcript does not support a tight range, set confidenceLevel to Low and list the assumptions the client needs to validate. Better to say "$80k pending validation of X and Y" than to widen the range to feel safer.\n'
+      + '3. ROADMAP: Every roadmap item must reference a specific tool, name, system, or fact from the signals. Generic items like "train staff" or "monitor metrics" are forbidden. Instead write something like "train front-desk staff on the new callback system with specific protocols for medication refill requests given the senior demographic". If you cannot make a roadmap item specific to this client, remove it.\n'
+      + '4. LEAD ANGLE: Identify the single highest-leverage pain or risk for the proposal to lead with. This is not necessarily the most obvious pain - it is the one the client themselves prioritized most heavily, or the one with the largest revenue or relationship impact. Explain why this beats more obvious alternatives.\n'
+      + '5. Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n\n'
+      + 'Return ONLY valid JSON (no markdown). Keep each text field to 2-3 sentences max where applicable.\n'
       + '{'
       + '"executiveSummary":"2-3 sentence overview capturing the most critical findings",'
       + '"currentState":"how the business operates today and where pain is most acute",'
-      + '"keySignals":["every significant signal extracted - be thorough, include all"],'
-      + '"painPoints":["specific pain with business impact and numbers where mentioned"],'
+      + '"keySignals":["every significant signal extracted - be thorough"],'
+      + '"painPoints":[{"severity":"High|Medium|Low","pain":"the specific pain in one clear sentence","businessImpact":"the downstream consequence - what this causes for revenue, relationships, or operations","evidenceFromTranscript":"the specific signal or quote that supports this"}],'
+      + '"recommendedLeadAngle":"the single strongest pain or risk for the proposal to lead with, and why this beats more obvious alternatives",'
       + '"constraints":["every constraint mentioned - legal, technical, regulatory, demographic"],'
-      + '"failedSolutions":["what was tried before and why it did not work"],'
+      + '"failedSolutions":["what was tried before, why it did not work, and what this implies for solution design"],'
       + '"revenueRisks":["specific revenue or relationship risks identified"],'
       + '"expansionOpportunity":"any scaling or expansion opportunity mentioned",'
       + '"assumptions":["what is being assumed not explicitly stated"],'
-      + '"roi":{"timeSavedPerWeek":"X hours/week based on transcript figures","estimatedAnnualValue":"$X","implementationCost":"$X-$X","roiMultiple":"Xx"},'
-      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high/medium/low","effort":"high/medium/low","projectFee":"$X-$X","retainerFee":"$X/month"}],'
+      + '"roi":{"timeSavedPerWeek":"single number or tight range max 25 percent spread","estimatedAnnualValue":"$X single number or tight range max 25 percent spread","implementationCost":"$X-$X tight range max 25 percent spread","roiMultiple":"Xx single number or tight range","confidenceLevel":"High|Medium|Low","assumptionsUsed":["assumption client should validate before this ROI is committed"]},'
+      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high|medium|low","effort":"high|medium|low","projectFee":"$X-$X","retainerFee":"$X/month"}],'
       + '"pricingSummary":{"totalProjectMin":"$X","totalProjectMax":"$X","totalRetainerMin":"$X","totalRetainerMax":"$X","recommendation":"recommendation"},'
-      + '"roadmap":{"phase1":{"title":"0-30 days","items":["item"]},"phase2":{"title":"30-90 days","items":["item"]},"phase3":{"title":"90+ days","items":["item"]}},'
+      + '"roadmap":{"phase1":{"title":"0-30 days","items":["specific item referencing tools or facts from signals"]},"phase2":{"title":"30-90 days","items":["specific item"]},"phase3":{"title":"90+ days","items":["specific item"]}},'
       + '"nextSteps":"specific recommended actions"'
       + '}';
 
-    var report = await callClaude(p2, 8000);
+    var report = await callClaude(p2, 10000);
     currentReport = report;
     currentReport.signals = signals;
     renderReport(report, clientName, industry, teamSize);
     setPanel(3);
 
   }catch(err){
-    document.getElementById('processingError').innerHTML='<div class="error-box">Stage error: '+err.message+'. Please try again.</div>';
+    document.getElementById('processingError').innerHTML='<div class="error-box">Stage error: '+escapeHtml(err.message)+'. Please try again.</div>';
   }
 }
 
@@ -467,78 +519,107 @@ function renderReport(r, clientName, industry, teamSize){
 
   html += '<div style="margin-bottom:24px;">'
     +'<div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:\'Syne\',sans-serif;margin-bottom:4px;">AI OPPORTUNITY AUDIT</div>'
-    +'<div style="font-family:\'Syne\',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;">'+clientName+'</div>'
-    +'<div style="font-size:12px;color:var(--muted);">'+industry+' &nbsp;.&nbsp; '+(teamSize||'N/A')+' &nbsp;.&nbsp; '+date+'</div>'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;">'+escapeHtml(clientName)+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);">'+escapeHtml(industry)+' &nbsp;.&nbsp; '+escapeHtml(teamSize||'N/A')+' &nbsp;.&nbsp; '+escapeHtml(date)+'</div>'
     +'</div>';
 
-  html += '<div class="report-section"><div class="section-label">EXECUTIVE SUMMARY</div><div class="report-card"><div class="report-text">'+r.executiveSummary+'</div></div></div>';
+  html += '<div class="report-section"><div class="section-label">EXECUTIVE SUMMARY</div><div class="report-card"><div class="report-text">'+escapeHtml(r.executiveSummary||'')+'</div></div></div>';
 
-  html += '<div class="report-section"><div class="section-label">KEY SIGNALS</div><div class="report-card"><ul class="signal-list">'+(r.keySignals||[]).map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul></div></div>';
+  // RECOMMENDED LEAD ANGLE - new section, prominent placement
+  if(r.recommendedLeadAngle){
+    html += '<div class="report-section"><div class="section-label">RECOMMENDED LEAD ANGLE FOR PROPOSAL</div><div class="lead-angle-card"><div class="lead-angle-text">'+escapeHtml(r.recommendedLeadAngle)+'</div></div></div>';
+  }
 
-  html += '<div class="report-section"><div class="section-label">PAIN POINTS</div><div class="report-card"><ul class="pain-list">'+(r.painPoints||[]).map(function(p){return '<li style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--font-mono);color:var(--muted);"><span style="color:var(--accent);flex-shrink:0;">-></span>'+p+'</li>';}).join('')+'</ul></div></div>';
+  html += '<div class="report-section"><div class="section-label">KEY SIGNALS</div><div class="report-card"><ul class="signal-list">'+(r.keySignals||[]).map(function(s){return '<li>'+escapeHtml(s)+'</li>';}).join('')+'</ul></div></div>';
 
+  // PAIN POINTS - new card-based render with severity, impact, evidence
+  if(r.painPoints && r.painPoints.length){
+    html += '<div class="report-section"><div class="section-label">PAIN POINTS ('+r.painPoints.length+')</div>';
+    // Sort by severity: High first, then Medium, then Low
+    var severityOrder = {'High':0,'Medium':1,'Low':2};
+    var sortedPains = r.painPoints.slice().sort(function(a,b){
+      return (severityOrder[a.severity]||3) - (severityOrder[b.severity]||3);
+    });
+    sortedPains.forEach(function(p){
+      // Handle both new object shape and legacy string shape (graceful fallback)
+      if(typeof p === 'string'){
+        html += '<div class="pain-card"><div class="pain-statement">'+escapeHtml(p)+'</div></div>';
+        return;
+      }
+      var sev = (p.severity||'Medium').toLowerCase();
+      html += '<div class="pain-card" style="border-left-color:'+(sev==='high'?'var(--accent)':sev==='medium'?'var(--yellow)':'var(--green)')+';">'
+        +'<div class="pain-header">'
+          +'<div class="pain-severity '+sev+'">'+escapeHtml(p.severity||'Medium').toUpperCase()+'</div>'
+        +'</div>'
+        +'<div class="pain-statement">'+escapeHtml(p.pain||'')+'</div>';
+      if(p.businessImpact){
+        html += '<div class="pain-impact"><span class="pain-impact-label">IMPACT</span>'+escapeHtml(p.businessImpact)+'</div>';
+      }
+      if(p.evidenceFromTranscript){
+        html += '<div class="pain-evidence"><span class="pain-evidence-label">EVIDENCE</span>'+escapeHtml(p.evidenceFromTranscript)+'</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ROI with confidence and assumptions
   if(r.roi){
     html += '<div class="report-section"><div class="section-label">ROI ESTIMATE</div><div class="roi-grid">'
-      +'<div class="roi-card"><div class="roi-val">'+r.roi.timeSavedPerWeek+'</div><div class="roi-lbl">Time Saved / Week</div></div>'
-      +'<div class="roi-card"><div class="roi-val">'+r.roi.estimatedAnnualValue+'</div><div class="roi-lbl">Est. Annual Value</div></div>'
-      +'<div class="roi-card"><div class="roi-val" style="color:var(--accent);">'+r.roi.roiMultiple+'</div><div class="roi-lbl">ROI Multiple</div></div>'
-      +'</div></div>';
+      +'<div class="roi-card"><div class="roi-val">'+escapeHtml(r.roi.timeSavedPerWeek||'')+'</div><div class="roi-lbl">Time Saved / Week</div></div>'
+      +'<div class="roi-card"><div class="roi-val">'+escapeHtml(r.roi.estimatedAnnualValue||'')+'</div><div class="roi-lbl">Est. Annual Value</div></div>'
+      +'<div class="roi-card"><div class="roi-val" style="color:var(--accent);">'+escapeHtml(r.roi.roiMultiple||'')+'</div><div class="roi-lbl">ROI Multiple</div></div>'
+      +'</div>';
+    if(r.roi.confidenceLevel){
+      var conf = r.roi.confidenceLevel.toLowerCase();
+      html += '<div style="margin-top:12px;"><span class="confidence-badge '+conf+'">CONFIDENCE: '+escapeHtml(r.roi.confidenceLevel).toUpperCase()+'</span></div>';
+    }
+    if(r.roi.assumptionsUsed && r.roi.assumptionsUsed.length){
+      html += '<div class="assumptions-list"><div class="assumptions-list-label">ASSUMPTIONS TO VALIDATE WITH CLIENT</div><ul>'
+        +r.roi.assumptionsUsed.map(function(a){return '<li>'+escapeHtml(a)+'</li>';}).join('')
+        +'</ul></div>';
+    }
+    html += '</div>';
   }
 
   if(r.roadmap){
     html += '<div class="report-section"><div class="section-label">IMPLEMENTATION ROADMAP</div>'
       +['phase1','phase2','phase3'].map(function(ph){
         var p = r.roadmap[ph]; if(!p) return '';
-        return '<div class="phase-card"><div class="phase-title">'+p.title+'</div><ul class="phase-items">'+(p.items||[]).map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul></div>';
+        return '<div class="phase-card"><div class="phase-title">'+escapeHtml(p.title||'')+'</div><ul class="phase-items">'+(p.items||[]).map(function(i){return '<li>'+escapeHtml(i)+'</li>';}).join('')+'</ul></div>';
       }).join('')+'</div>';
   }
 
   html += '<div class="report-section"><div class="section-label">PRICING SUMMARY</div><div class="report-card">';
   if(r.pricingSummary){
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'
-      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">PROJECT RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">'+r.pricingSummary.totalProjectMin+' - '+r.pricingSummary.totalProjectMax+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">RETAINER RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent2);">'+r.pricingSummary.totalRetainerMin+' - '+r.pricingSummary.totalRetainerMax+'/mo</div></div>'
+      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">PROJECT RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">'+escapeHtml(r.pricingSummary.totalProjectMin||'')+' - '+escapeHtml(r.pricingSummary.totalProjectMax||'')+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">RETAINER RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent2);">'+escapeHtml(r.pricingSummary.totalRetainerMin||'')+' - '+escapeHtml(r.pricingSummary.totalRetainerMax||'')+'/mo</div></div>'
       +'</div>';
-    if(r.pricingSummary.recommendation) html += '<div style="margin-top:12px;font-size:12px;color:var(--muted);">'+r.pricingSummary.recommendation+'</div>';
+    if(r.pricingSummary.recommendation) html += '<div style="margin-top:12px;font-size:12px;color:var(--muted);">'+escapeHtml(r.pricingSummary.recommendation)+'</div>';
   }
   html += '</div></div>';
-
-
-  // Hard Constraints
-  if(r.hardConstraints && r.hardConstraints.length){
-    html += '<div class="report-section"><div class="section-label">HARD CONSTRAINTS</div><div class="report-card"><ul class="signal-list">'
-      +r.hardConstraints.map(function(c){return '<li style="color:var(--yellow);">'+c+'</li>';}).join('')
-      +'</ul></div></div>';
-  }
-
-  // Regulatory Blockers
-  if(r.regulatoryBlockers && r.regulatoryBlockers.length){
-    html += '<div class="report-section"><div class="section-label">REGULATORY BLOCKERS</div><div class="report-card" style="border-color:var(--accent);"><ul class="signal-list">'
-      +r.regulatoryBlockers.map(function(c){return '<li style="color:var(--accent);">'+c+'</li>';}).join('')
-      +'</ul></div></div>';
-  }
 
   // Failed Solutions
   if(r.failedSolutions && r.failedSolutions.length){
     html += '<div class="report-section"><div class="section-label">PREVIOUSLY TRIED -- DID NOT WORK</div><div class="report-card"><ul class="signal-list">'
-      +r.failedSolutions.map(function(c){return '<li style="color:var(--muted);">'+c+'</li>';}).join('')
+      +r.failedSolutions.map(function(c){return '<li style="color:var(--muted);">'+escapeHtml(c)+'</li>';}).join('')
       +'</ul></div></div>';
   }
 
   // Revenue Risks
   if(r.revenueRisks && r.revenueRisks.length){
     html += '<div class="report-section"><div class="section-label">REVENUE RISKS</div><div class="report-card" style="border-color:var(--accent);"><ul class="signal-list">'
-      +r.revenueRisks.map(function(c){return '<li style="color:var(--accent);">'+c+'</li>';}).join('')
+      +r.revenueRisks.map(function(c){return '<li style="color:var(--accent);">'+escapeHtml(c)+'</li>';}).join('')
       +'</ul></div></div>';
   }
 
   // Expansion Opportunity
   if(r.expansionOpportunity){
-    html += '<div class="report-section"><div class="section-label">EXPANSION OPPORTUNITY</div><div class="report-card" style="border-color:var(--accent2);"><div class="report-text" style="color:var(--accent2);">'+r.expansionOpportunity+'</div></div></div>';
+    html += '<div class="report-section"><div class="section-label">EXPANSION OPPORTUNITY</div><div class="report-card" style="border-color:var(--accent2);"><div class="report-text" style="color:var(--accent2);">'+escapeHtml(r.expansionOpportunity)+'</div></div></div>';
   }
 
-
-    document.getElementById('reportContent').innerHTML = html;
+  document.getElementById('reportContent').innerHTML = html;
 }
 
 function goToSolutions(){
@@ -563,11 +644,11 @@ function renderSolutions(){
       '<div class="solution-left">'
         +'<div class="solution-check '+(sol.selected?'checked':'')+'" onclick="toggleSolution('+i+')" id="check-'+i+'"></div>'
         +'<div class="solution-content">'
-          +'<div class="solution-title">'+sol.title+'</div>'
-          +'<div class="solution-desc" id="sol-desc-'+i+'">'+sol.desc+'</div>'
-          +'<div class="solution-pain">Pain: '+sol.painPoint+'</div>'
+          +'<div class="solution-title">'+escapeHtml(sol.title||'')+'</div>'
+          +'<div class="solution-desc" id="sol-desc-'+i+'">'+escapeHtml(sol.desc||'')+'</div>'
+          +'<div class="solution-pain">Pain: '+escapeHtml(sol.painPoint||'')+'</div>'
           +'<div class="solution-edit-area" id="edit-area-'+i+'">'
-            +'<textarea id="edit-ta-'+i+'">'+sol.desc+'</textarea>'
+            +'<textarea id="edit-ta-'+i+'">'+escapeHtml(sol.desc||'')+'</textarea>'
             +'<button class="save-edit-btn" onclick="saveEdit('+i+')">Save</button>'
           +'</div>'
         +'</div>'
@@ -635,11 +716,17 @@ function confirmSolutions(){
     report: currentReport,
     solutions: currentSolutions
   };
-  var audits = JSON.parse(localStorage.getItem('ratova_audits')||'[]');
-  audits.unshift(auditData);
-  localStorage.setItem('ratova_audits', JSON.stringify(audits));
-  localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
-  document.getElementById('solutionsSaveMsg').innerHTML='<div class="save-msg">Audit saved. You can now open the Proposal Tool, Follow-Up Tool, or Implementation Guide.</div>';
+  try{
+    var audits = JSON.parse(localStorage.getItem('ratova_audits')||'[]');
+    audits.unshift(auditData);
+    // Cap saved audits at 50 to prevent quota issues
+    if(audits.length > 50) audits = audits.slice(0, 50);
+    localStorage.setItem('ratova_audits', JSON.stringify(audits));
+    localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
+    document.getElementById('solutionsSaveMsg').innerHTML='<div class="save-msg">Audit saved. Next: Tool 3 (Follow-Up Email) within 2 hours of the call, then Tool 2 (Proposal), then Tool 4 (Implementation Guide) once client confirms.</div>';
+  }catch(err){
+    document.getElementById('solutionsError').innerHTML='<div class="error-box">Save failed: '+escapeHtml(err.message)+'. Browser storage may be full - try clearing old audits.</div>';
+  }
 }
 
 function saveAudit(){
@@ -653,16 +740,25 @@ function saveAudit(){
     report: currentReport,
     solutions: currentSolutions
   };
-  localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
-  document.getElementById('reportSaveMsg').innerHTML='<div class="save-msg">Audit saved to browser storage.</div>';
+  try{
+    localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
+    document.getElementById('reportSaveMsg').innerHTML='<div class="save-msg">Audit saved to browser storage.</div>';
+  }catch(err){
+    document.getElementById('reportSaveMsg').innerHTML='<div class="error-box">Save failed: '+escapeHtml(err.message)+'.</div>';
+  }
 }
 
 function copyReport(){
   if(!currentReport){return;}
+  var painPointsText = (currentReport.painPoints||[]).map(function(p,i){
+    if(typeof p === 'string') return (i+1)+'. '+p;
+    return (i+1)+'. ['+(p.severity||'Medium')+'] '+(p.pain||'')+'\n   Impact: '+(p.businessImpact||'')+'\n   Evidence: '+(p.evidenceFromTranscript||'');
+  }).join('\n\n');
   var text = 'AI OPPORTUNITY AUDIT - '+currentClientName+'\n\n'
-    +'EXECUTIVE SUMMARY\n'+currentReport.executiveSummary+'\n\n'
-    +'PAIN POINTS\n'+(currentReport.painPoints||[]).map(function(p,i){return (i+1)+'. '+p;}).join('\n')+'\n\n'
-    +'ROI: '+(currentReport.roi?currentReport.roi.estimatedAnnualValue+' annual value':'')+'\n\n'
+    +'EXECUTIVE SUMMARY\n'+(currentReport.executiveSummary||'')+'\n\n'
+    +(currentReport.recommendedLeadAngle?'RECOMMENDED LEAD ANGLE\n'+currentReport.recommendedLeadAngle+'\n\n':'')
+    +'PAIN POINTS\n'+painPointsText+'\n\n'
+    +'ROI: '+(currentReport.roi?currentReport.roi.estimatedAnnualValue+' annual value (Confidence: '+(currentReport.roi.confidenceLevel||'N/A')+')':'')+'\n\n'
     +'OPPORTUNITIES\n'+(currentReport.opportunities||[]).map(function(o,i){return (i+1)+'. '+o.title+' - '+o.solution;}).join('\n');
   navigator.clipboard.writeText(text);
   document.getElementById('reportSaveMsg').innerHTML='<div class="save-msg">Report copied to clipboard.</div>';
@@ -671,11 +767,17 @@ function copyReport(){
 if(sessionStorage.getItem('ratova_auth')==='1'){
   document.getElementById('pwScreen').style.display='none';
   document.getElementById('app').style.display='block';
-  if(typeof loadAudit === 'function') loadAudit();
-  var savedKey = localStorage.getItem('ratova_api_key');
-  if(savedKey && document.getElementById('apiKey')) document.getElementById('apiKey').value = savedKey;
+  if(document.getElementById('apiKey')){
+    var savedKey = localStorage.getItem('ratova_api_key');
+    if(savedKey) document.getElementById('apiKey').value = savedKey;
+    document.getElementById('apiKey').addEventListener('change',function(){
+      localStorage.setItem('ratova_api_key', this.value.trim());
+    });
+  }
+  if(document.getElementById('transcript')){
+    document.getElementById('transcript').addEventListener('input', updateCharHint);
+  }
 }
 </script>
 </body>
 </html>
-
