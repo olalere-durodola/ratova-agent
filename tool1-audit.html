@@ -323,6 +323,29 @@ function escapeHtml(str){
     .replace(/'/g,'&#39;');
 }
 
+// Defensive string conversion - if a field came back as an object instead of a string, render its useful values rather than [object Object]
+function safeStr(val){
+  if(val===null||val===undefined) return '';
+  if(typeof val === 'string') return val;
+  if(typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if(Array.isArray(val)) return val.map(safeStr).join(', ');
+  if(typeof val === 'object'){
+    // Try common useful fields, then fall back to joining all string values
+    if(val.text) return safeStr(val.text);
+    if(val.value) return safeStr(val.value);
+    if(val.description) return safeStr(val.description);
+    if(val.name) return safeStr(val.name);
+    var parts = [];
+    for(var k in val){
+      if(val.hasOwnProperty(k) && val[k]){
+        parts.push(k+': '+safeStr(val[k]));
+      }
+    }
+    return parts.join(' | ');
+  }
+  return String(val);
+}
+
 function checkPw(){
   var val = document.getElementById('pwInput').value;
   if(val === PASSWORD){
@@ -479,30 +502,32 @@ async function startAnalysis(){
     document.getElementById('logList').innerHTML='';
     await runLogs(LOGS_P2,'logList');
 
-    var p2 = 'You are an expert AI agency consultant. Based on ALL the extracted signals below, produce a comprehensive AI Opportunity Audit Report. Every point from the transcript should inform this report. All prices in USD.\n\n'
+    var p2 = 'You are an expert AI agency consultant. Based on ALL the extracted signals below, produce a comprehensive AI Opportunity Audit Report.\n\n'
       + 'CLIENT: ' + clientName + '\nINDUSTRY: ' + industry + '\nTEAM SIZE: ' + (teamSize||'Unknown') + '\n\n'
       + 'ALL EXTRACTED SIGNALS:\n' + JSON.stringify(signals) + '\n\n'
       + 'CRITICAL INSTRUCTIONS - read these before generating output:\n'
-      + '1. PAIN POINTS: Produce 8-12 pain points minimum. Each pain point must include downstream business impact (the chain of consequence) and specific transcript evidence. Do not collapse multiple distinct pains into one entry. If one root cause produces multiple downstream effects (e.g. manual call handling causing both patient frustration AND referring doctor attrition), list them as separate pain points with different severity ratings.\n'
-      + '2. ROI: Numeric ranges must not exceed 25 percent spread. $75k-$95k is acceptable. $75k-$150k is not. If the transcript does not support a tight range, set confidenceLevel to Low and list the assumptions the client needs to validate. Better to say "$80k pending validation of X and Y" than to widen the range to feel safer.\n'
+      + '1. DO NOT INVENT NUMBERS. This audit is qualitative. Do not output dollar figures, ROI multiples, project pricing, or retainer pricing. Pricing and ROI calculations happen in the proposal stage with operator-supplied inputs (hourly rate, client baselines). Your job here is to identify what drives ROI, not to estimate it.\n'
+      + '2. PAIN POINTS: Produce 8-12 pain points minimum. Each pain point must include downstream business impact (the chain of consequence) and specific transcript evidence. Do not collapse multiple distinct pains into one entry. If one root cause produces multiple downstream effects (e.g. manual call handling causing both patient frustration AND referring doctor attrition), list them as separate pain points with different severity ratings.\n'
       + '3. ROADMAP: Every roadmap item must reference a specific tool, name, system, or fact from the signals. Generic items like "train staff" or "monitor metrics" are forbidden. Instead write something like "train front-desk staff on the new callback system with specific protocols for medication refill requests given the senior demographic". If you cannot make a roadmap item specific to this client, remove it.\n'
       + '4. LEAD ANGLE: Identify the single highest-leverage pain or risk for the proposal to lead with. This is not necessarily the most obvious pain - it is the one the client themselves prioritized most heavily, or the one with the largest revenue or relationship impact. Explain why this beats more obvious alternatives.\n'
-      + '5. Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n\n'
-      + 'Return ONLY valid JSON (no markdown). Keep each text field to 2-3 sentences max where applicable.\n'
+      + '5. ROI INPUTS: Identify the specific quantitative inputs needed to calculate real ROI. For each input, name what it is, why it matters, and where it would come from (client interview, internal data, or a reasonable industry benchmark with the source noted). Do NOT estimate the values yourself.\n'
+      + '6. PRICING FACTORS: Identify the qualitative factors that should drive pricing for this engagement (number of solutions, technical complexity, integration count, compliance requirements, expected timeline). Do NOT output dollar amounts.\n'
+      + '7. Use every signal in your analysis. Do not ignore any point extracted from the transcript.\n\n'
+      + 'Return ONLY valid JSON (no markdown). Keep each text field to 2-3 sentences max where applicable. All array fields must contain strings, not objects, unless the schema below explicitly shows an object structure.\n'
       + '{'
       + '"executiveSummary":"2-3 sentence overview capturing the most critical findings",'
       + '"currentState":"how the business operates today and where pain is most acute",'
       + '"keySignals":["every significant signal extracted - be thorough"],'
       + '"painPoints":[{"severity":"High|Medium|Low","pain":"the specific pain in one clear sentence","businessImpact":"the downstream consequence - what this causes for revenue, relationships, or operations","evidenceFromTranscript":"the specific signal or quote that supports this"}],'
       + '"recommendedLeadAngle":"the single strongest pain or risk for the proposal to lead with, and why this beats more obvious alternatives",'
-      + '"constraints":["every constraint mentioned - legal, technical, regulatory, demographic"],'
-      + '"failedSolutions":["what was tried before, why it did not work, and what this implies for solution design"],'
-      + '"revenueRisks":["specific revenue or relationship risks identified"],'
+      + '"constraints":["every constraint mentioned - legal, technical, regulatory, demographic - as plain strings"],'
+      + '"failedSolutions":["what was tried before, why it did not work, and what this implies for solution design - as plain strings"],'
+      + '"revenueRisks":["specific revenue or relationship risks identified - as plain strings"],'
       + '"expansionOpportunity":"any scaling or expansion opportunity mentioned",'
-      + '"assumptions":["what is being assumed not explicitly stated"],'
-      + '"roi":{"timeSavedPerWeek":"single number or tight range max 25 percent spread","estimatedAnnualValue":"$X single number or tight range max 25 percent spread","implementationCost":"$X-$X tight range max 25 percent spread","roiMultiple":"Xx single number or tight range","confidenceLevel":"High|Medium|Low","assumptionsUsed":["assumption client should validate before this ROI is committed"]},'
-      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high|medium|low","effort":"high|medium|low","projectFee":"$X-$X","retainerFee":"$X/month"}],'
-      + '"pricingSummary":{"totalProjectMin":"$X","totalProjectMax":"$X","totalRetainerMin":"$X","totalRetainerMax":"$X","recommendation":"recommendation"},'
+      + '"assumptions":["what is being assumed not explicitly stated - as plain strings"],'
+      + '"roiInputsNeeded":[{"input":"name of the quantitative input needed","whyItMatters":"why this input drives ROI","source":"client interview | internal data | industry benchmark with source"}],'
+      + '"pricingFactors":{"solutionCount":"number of distinct solutions identified","complexityNotes":"qualitative complexity assessment - what makes this engagement simple or hard","integrationRequirements":["specific systems requiring integration"],"complianceLevel":"none | standard | high (HIPAA / SOC2 / etc with specifics)","timelineFactors":"what affects how long this takes - urgency, dependencies, blockers"},'
+      + '"opportunities":[{"title":"opportunity name","painPoint":"the specific pain it addresses","solution":"specific solution that respects all constraints mentioned","impact":"high|medium|low","effort":"high|medium|low","estimatedBuildHours":"hours estimate range or single number","procureToolCategory":"category of off-the-shelf tool that could replace this build, or null if must-build"}],'
       + '"roadmap":{"phase1":{"title":"0-30 days","items":["specific item referencing tools or facts from signals"]},"phase2":{"title":"30-90 days","items":["specific item"]},"phase3":{"title":"90+ days","items":["specific item"]}},'
       + '"nextSteps":"specific recommended actions"'
       + '}';
@@ -535,7 +560,7 @@ function renderReport(r, clientName, industry, teamSize){
     html += '<div class="report-section"><div class="section-label">RECOMMENDED LEAD ANGLE FOR PROPOSAL</div><div class="lead-angle-card"><div class="lead-angle-text">'+escapeHtml(r.recommendedLeadAngle)+'</div></div></div>';
   }
 
-  html += '<div class="report-section"><div class="section-label">KEY SIGNALS</div><div class="report-card"><ul class="signal-list">'+(r.keySignals||[]).map(function(s){return '<li>'+escapeHtml(s)+'</li>';}).join('')+'</ul></div></div>';
+  html += '<div class="report-section"><div class="section-label">KEY SIGNALS</div><div class="report-card"><ul class="signal-list">'+(r.keySignals||[]).map(function(s){return '<li>'+escapeHtml(safeStr(s))+'</li>';}).join('')+'</ul></div></div>';
 
   // PAIN POINTS - new card-based render with severity, impact, evidence
   if(r.painPoints && r.painPoints.length){
@@ -568,22 +593,21 @@ function renderReport(r, clientName, industry, teamSize){
     html += '</div>';
   }
 
-  // ROI with confidence and assumptions
-  if(r.roi){
-    html += '<div class="report-section"><div class="section-label">ROI ESTIMATE</div><div class="roi-grid">'
-      +'<div class="roi-card"><div class="roi-val">'+escapeHtml(r.roi.timeSavedPerWeek||'')+'</div><div class="roi-lbl">Time Saved / Week</div></div>'
-      +'<div class="roi-card"><div class="roi-val">'+escapeHtml(r.roi.estimatedAnnualValue||'')+'</div><div class="roi-lbl">Est. Annual Value</div></div>'
-      +'<div class="roi-card"><div class="roi-val" style="color:var(--accent);">'+escapeHtml(r.roi.roiMultiple||'')+'</div><div class="roi-lbl">ROI Multiple</div></div>'
-      +'</div>';
-    if(r.roi.confidenceLevel){
-      var conf = r.roi.confidenceLevel.toLowerCase();
-      html += '<div style="margin-top:12px;"><span class="confidence-badge '+conf+'">CONFIDENCE: '+escapeHtml(r.roi.confidenceLevel).toUpperCase()+'</span></div>';
-    }
-    if(r.roi.assumptionsUsed && r.roi.assumptionsUsed.length){
-      html += '<div class="assumptions-list"><div class="assumptions-list-label">ASSUMPTIONS TO VALIDATE WITH CLIENT</div><ul>'
-        +r.roi.assumptionsUsed.map(function(a){return '<li>'+escapeHtml(a)+'</li>';}).join('')
-        +'</ul></div>';
-    }
+  // ROI INPUTS NEEDED - replaces invented ROI estimate
+  if(r.roiInputsNeeded && r.roiInputsNeeded.length){
+    html += '<div class="report-section"><div class="section-label">ROI INPUTS NEEDED</div>'
+      +'<div class="report-card" style="margin-bottom:10px;"><div style="font-size:12px;color:var(--muted);line-height:1.6;">ROI is not estimated in the audit. The proposal will calculate ROI using these inputs - gather them from the client during follow-up or from internal data.</div></div>';
+    r.roiInputsNeeded.forEach(function(item){
+      if(typeof item === 'string'){
+        html += '<div class="pain-card" style="border-left-color:var(--accent2);"><div class="pain-statement">'+escapeHtml(item)+'</div></div>';
+        return;
+      }
+      html += '<div class="pain-card" style="border-left-color:var(--accent2);">'
+        +'<div class="pain-statement">'+escapeHtml(item.input||'')+'</div>'
+        +(item.whyItMatters?'<div class="pain-impact"><span class="pain-impact-label">WHY</span>'+escapeHtml(item.whyItMatters)+'</div>':'')
+        +(item.source?'<div class="pain-evidence"><span class="pain-evidence-label">SOURCE</span>'+escapeHtml(item.source)+'</div>':'')
+        +'</div>';
+    });
     html += '</div>';
   }
 
@@ -591,37 +615,53 @@ function renderReport(r, clientName, industry, teamSize){
     html += '<div class="report-section"><div class="section-label">IMPLEMENTATION ROADMAP</div>'
       +['phase1','phase2','phase3'].map(function(ph){
         var p = r.roadmap[ph]; if(!p) return '';
-        return '<div class="phase-card"><div class="phase-title">'+escapeHtml(p.title||'')+'</div><ul class="phase-items">'+(p.items||[]).map(function(i){return '<li>'+escapeHtml(i)+'</li>';}).join('')+'</ul></div>';
+        return '<div class="phase-card"><div class="phase-title">'+escapeHtml(p.title||'')+'</div><ul class="phase-items">'+(p.items||[]).map(function(i){return '<li>'+escapeHtml(safeStr(i))+'</li>';}).join('')+'</ul></div>';
       }).join('')+'</div>';
   }
 
-  html += '<div class="report-section"><div class="section-label">PRICING SUMMARY</div><div class="report-card">';
-  if(r.pricingSummary){
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'
-      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">PROJECT RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent);">'+escapeHtml(r.pricingSummary.totalProjectMin||'')+' - '+escapeHtml(r.pricingSummary.totalProjectMax||'')+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">RETAINER RANGE</div><div style="font-family:\'Syne\',sans-serif;font-size:18px;font-weight:800;color:var(--accent2);">'+escapeHtml(r.pricingSummary.totalRetainerMin||'')+' - '+escapeHtml(r.pricingSummary.totalRetainerMax||'')+'/mo</div></div>'
-      +'</div>';
-    if(r.pricingSummary.recommendation) html += '<div style="margin-top:12px;font-size:12px;color:var(--muted);">'+escapeHtml(r.pricingSummary.recommendation)+'</div>';
+  // PRICING FACTORS - replaces invented pricing summary
+  if(r.pricingFactors){
+    html += '<div class="report-section"><div class="section-label">PRICING FACTORS</div>'
+      +'<div class="report-card" style="margin-bottom:10px;"><div style="font-size:12px;color:var(--muted);line-height:1.6;">Pricing is not calculated in the audit. The proposal will calculate pricing using these factors plus your hourly rate and margin.</div></div>'
+      +'<div class="report-card">';
+    var pf = r.pricingFactors;
+    if(pf.solutionCount){
+      html += '<div style="margin-bottom:10px;"><span style="font-size:9px;color:var(--accent2);font-family:\'Syne\',sans-serif;font-weight:700;letter-spacing:1.5px;margin-right:8px;">SOLUTIONS</span><span style="font-size:13px;color:var(--text);">'+escapeHtml(safeStr(pf.solutionCount))+'</span></div>';
+    }
+    if(pf.complexityNotes){
+      html += '<div style="margin-bottom:10px;"><div style="font-size:9px;color:var(--accent2);font-family:\'Syne\',sans-serif;font-weight:700;letter-spacing:1.5px;margin-bottom:4px;">COMPLEXITY</div><div style="font-size:12px;color:var(--muted);line-height:1.6;">'+escapeHtml(safeStr(pf.complexityNotes))+'</div></div>';
+    }
+    if(pf.integrationRequirements && pf.integrationRequirements.length){
+      html += '<div style="margin-bottom:10px;"><div style="font-size:9px;color:var(--accent2);font-family:\'Syne\',sans-serif;font-weight:700;letter-spacing:1.5px;margin-bottom:4px;">INTEGRATIONS</div><ul class="signal-list">'
+        +pf.integrationRequirements.map(function(i){return '<li>'+escapeHtml(safeStr(i))+'</li>';}).join('')
+        +'</ul></div>';
+    }
+    if(pf.complianceLevel){
+      html += '<div style="margin-bottom:10px;"><span style="font-size:9px;color:var(--accent2);font-family:\'Syne\',sans-serif;font-weight:700;letter-spacing:1.5px;margin-right:8px;">COMPLIANCE</span><span style="font-size:13px;color:var(--text);">'+escapeHtml(safeStr(pf.complianceLevel))+'</span></div>';
+    }
+    if(pf.timelineFactors){
+      html += '<div><div style="font-size:9px;color:var(--accent2);font-family:\'Syne\',sans-serif;font-weight:700;letter-spacing:1.5px;margin-bottom:4px;">TIMELINE</div><div style="font-size:12px;color:var(--muted);line-height:1.6;">'+escapeHtml(safeStr(pf.timelineFactors))+'</div></div>';
+    }
+    html += '</div></div>';
   }
-  html += '</div></div>';
 
-  // Failed Solutions
+  // Failed Solutions - hardened against object shape
   if(r.failedSolutions && r.failedSolutions.length){
     html += '<div class="report-section"><div class="section-label">PREVIOUSLY TRIED -- DID NOT WORK</div><div class="report-card"><ul class="signal-list">'
-      +r.failedSolutions.map(function(c){return '<li style="color:var(--muted);">'+escapeHtml(c)+'</li>';}).join('')
+      +r.failedSolutions.map(function(c){return '<li style="color:var(--muted);">'+escapeHtml(safeStr(c))+'</li>';}).join('')
       +'</ul></div></div>';
   }
 
-  // Revenue Risks
+  // Revenue Risks - hardened against object shape
   if(r.revenueRisks && r.revenueRisks.length){
     html += '<div class="report-section"><div class="section-label">REVENUE RISKS</div><div class="report-card" style="border-color:var(--accent);"><ul class="signal-list">'
-      +r.revenueRisks.map(function(c){return '<li style="color:var(--accent);">'+escapeHtml(c)+'</li>';}).join('')
+      +r.revenueRisks.map(function(c){return '<li style="color:var(--accent);">'+escapeHtml(safeStr(c))+'</li>';}).join('')
       +'</ul></div></div>';
   }
 
   // Expansion Opportunity
   if(r.expansionOpportunity){
-    html += '<div class="report-section"><div class="section-label">EXPANSION OPPORTUNITY</div><div class="report-card" style="border-color:var(--accent2);"><div class="report-text" style="color:var(--accent2);">'+escapeHtml(r.expansionOpportunity)+'</div></div></div>';
+    html += '<div class="report-section"><div class="section-label">EXPANSION OPPORTUNITY</div><div class="report-card" style="border-color:var(--accent2);"><div class="report-text" style="color:var(--accent2);">'+escapeHtml(safeStr(r.expansionOpportunity))+'</div></div></div>';
   }
 
   document.getElementById('reportContent').innerHTML = html;
@@ -632,7 +672,18 @@ function goToSolutions(){
     alert('No opportunities found in report.'); return;
   }
   currentSolutions = currentReport.opportunities.map(function(o, i){
-    return {id:i, title:o.title, desc:o.solution, painPoint:o.painPoint, impact:o.impact, projectFee:o.projectFee, retainerFee:o.retainerFee, selected:true, method:'build'};
+    return {
+      id:i,
+      title:o.title,
+      desc:o.solution,
+      painPoint:o.painPoint,
+      impact:o.impact,
+      effort:o.effort,
+      estimatedBuildHours:o.estimatedBuildHours,
+      procureToolCategory:o.procureToolCategory,
+      selected:true,
+      method: o.procureToolCategory ? 'procure' : 'build'
+    };
   });
   renderSolutions();
   setPanel(4);
@@ -728,7 +779,7 @@ function confirmSolutions(){
     if(audits.length > 50) audits = audits.slice(0, 50);
     localStorage.setItem('ratova_audits', JSON.stringify(audits));
     localStorage.setItem('ratova_current_audit', JSON.stringify(auditData));
-    document.getElementById('solutionsSaveMsg').innerHTML='<div class="save-msg">Audit saved. Next: Tool 3 (Follow-Up Email) within 2 hours of the call, then Tool 2 (Proposal), then Tool 4 (Implementation Guide) once client confirms.</div>';
+    document.getElementById('solutionsSaveMsg').innerHTML='<div class="save-msg">Audit saved. Next: Tool 3 (Follow-Up Email within 2 hours - use it to also gather the ROI inputs needed), then Tool 2 (Proposal - calculates real pricing from your hourly rate and gathered inputs), then Tool 4 (Impl Guide once client confirms).</div>';
   }catch(err){
     document.getElementById('solutionsError').innerHTML='<div class="error-box">Save failed: '+escapeHtml(err.message)+'. Browser storage may be full - try clearing old audits.</div>';
   }
@@ -759,11 +810,15 @@ function copyReport(){
     if(typeof p === 'string') return (i+1)+'. '+p;
     return (i+1)+'. ['+(p.severity||'Medium')+'] '+(p.pain||'')+'\n   Impact: '+(p.businessImpact||'')+'\n   Evidence: '+(p.evidenceFromTranscript||'');
   }).join('\n\n');
+  var roiInputsText = (currentReport.roiInputsNeeded||[]).map(function(r,i){
+    if(typeof r === 'string') return (i+1)+'. '+r;
+    return (i+1)+'. '+(r.input||'')+' (Source: '+(r.source||'TBD')+')';
+  }).join('\n');
   var text = 'AI OPPORTUNITY AUDIT - '+currentClientName+'\n\n'
     +'EXECUTIVE SUMMARY\n'+(currentReport.executiveSummary||'')+'\n\n'
     +(currentReport.recommendedLeadAngle?'RECOMMENDED LEAD ANGLE\n'+currentReport.recommendedLeadAngle+'\n\n':'')
     +'PAIN POINTS\n'+painPointsText+'\n\n'
-    +'ROI: '+(currentReport.roi?currentReport.roi.estimatedAnnualValue+' annual value (Confidence: '+(currentReport.roi.confidenceLevel||'N/A')+')':'')+'\n\n'
+    +(roiInputsText?'ROI INPUTS NEEDED (gather from client before quoting)\n'+roiInputsText+'\n\n':'')
     +'OPPORTUNITIES\n'+(currentReport.opportunities||[]).map(function(o,i){return (i+1)+'. '+o.title+' - '+o.solution;}).join('\n');
   navigator.clipboard.writeText(text);
   document.getElementById('reportSaveMsg').innerHTML='<div class="save-msg">Report copied to clipboard.</div>';
