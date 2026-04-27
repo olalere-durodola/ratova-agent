@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratova AI — Agency Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080810;--surface:#0f0f1a;--surface2:#141425;--border:#1e1e32;
+  --text:#e8e8f0;--muted:#6b6b8a;--accent:#e11d48;--accent2:#3b82f6;
+  --green:#22c55e;--yellow:#eab308;--font-mono:'IBM Plex Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+
+/* Grid background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(225,29,72,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;
+}
+
+/* Glow effects */
+.glow-1{position:fixed;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(225,29,72,0.06) 0%,transparent 70%);pointer-events:none;}
+.glow-2{position:fixed;bottom:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,0.06) 0%,transparent 70%);pointer-events:none;}
+
+/* PASSWORD SCREEN */
+#pwScreen{width:100%;max-width:420px;padding:20px;}
+.pw-logo{display:flex;align-items:center;gap:14px;margin-bottom:32px;justify-content:center;}
+.pw-mark{width:52px;height:52px;position:relative;border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pw-mark::before{content:'';position:absolute;inset:6px;border:2px solid var(--accent2);}
+.pw-mark::after{content:'';position:absolute;top:-4px;left:-4px;width:12px;height:3px;background:var(--accent);}
+.pm-dot{position:absolute;bottom:-3px;right:-3px;width:12px;height:3px;background:var(--accent2);}
+.pw-mark span{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);position:relative;z-index:1;}
+.pw-brand-wrap{display:flex;flex-direction:column;gap:2px;}
+.pw-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:5px;color:var(--text);}
+.pw-sub{font-size:10px;letter-spacing:2px;color:var(--muted);font-family:var(--font-mono);}
+.pw-box{background:var(--surface);border:1px solid var(--border);padding:32px;}
+.pw-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:20px;font-family:'Syne',sans-serif;text-align:center;}
+.pw-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:14px 16px;font-family:var(--font-mono);font-size:15px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:background 0.2s;}
+.pw-btn:hover{background:#be1239;}
+.pw-error{color:var(--accent);font-size:11px;font-family:var(--font-mono);text-align:center;margin-top:10px;display:none;}
+.pw-version{text-align:center;margin-top:16px;font-size:10px;color:var(--muted);font-family:var(--font-mono);}
+
+/* HUB */
+#hub{display:none;width:100%;max-width:860px;padding:20px;}
+.hub-header{text-align:center;margin-bottom:48px;}
+.hub-logo{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:16px;}
+.hub-mark{width:48px;height:48px;position:relative;border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hub-mark::before{content:'';position:absolute;inset:6px;border:2px solid var(--accent2);}
+.hub-mark::after{content:'';position:absolute;top:-3px;left:-3px;width:10px;height:2.5px;background:var(--accent);}
+.hub-dot{position:absolute;bottom:-3px;right:-3px;width:10px;height:2.5px;background:var(--accent2);}
+.hub-mark span{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);position:relative;z-index:1;}
+.hub-brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:5px;}
+.hub-tagline{font-size:11px;color:var(--muted);font-family:var(--font-mono);letter-spacing:1.5px;}
+
+/* WORKFLOW INDICATOR */
+.workflow{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:48px;flex-wrap:wrap;}
+.wf-step{font-size:9px;font-family:var(--font-mono);color:var(--muted);padding:4px 10px;border:1px solid var(--border);white-space:nowrap;}
+.wf-step.active{color:var(--accent2);border-color:var(--accent2);}
+.wf-arrow{font-size:10px;color:var(--border);padding:0 2px;}
+
+/* TOOL CARDS */
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+.tool-card{background:var(--surface);border:1px solid var(--border);padding:28px;cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.15s;}
+.tool-card:hover{transform:translateY(-2px);}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.tool-card:nth-child(1)::before{background:var(--accent);}
+.tool-card:nth-child(2)::before{background:var(--green);}
+.tool-card:nth-child(3)::before{background:var(--accent2);}
+.tool-card:nth-child(4)::before{background:var(--yellow);}
+.tool-card:nth-child(1):hover{border-color:var(--accent);}
+.tool-card:nth-child(2):hover{border-color:var(--green);}
+.tool-card:nth-child(3):hover{border-color:var(--accent2);}
+.tool-card:nth-child(4):hover{border-color:var(--yellow);}
+.tool-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:12px;}
+.tool-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px;}
+.tool-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.tool-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tool-tag{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;padding:3px 8px;border:1px solid var(--border);color:var(--muted);}
+.tool-arrow{position:absolute;bottom:20px;right:20px;font-family:var(--font-mono);font-size:16px;color:var(--border);}
+.tool-card:hover .tool-arrow{color:var(--text);}
+.tool-card:nth-child(1) .tool-num{color:var(--accent);}
+.tool-card:nth-child(2) .tool-num{color:var(--green);}
+.tool-card:nth-child(3) .tool-num{color:var(--accent2);}
+.tool-card:nth-child(4) .tool-num{color:var(--yellow);}
+
+/* CURRENT AUDIT BANNER */
+.audit-banner{background:var(--surface2);border:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.audit-banner-left{display:flex;align-items:center;gap:12px;}
+.audit-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.audit-info{font-size:12px;}
+.audit-client{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
+.audit-meta{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:2px;}
+.audit-clear{font-size:10px;color:var(--muted);font-family:var(--font-mono);cursor:pointer;background:transparent;border:none;text-decoration:underline;}
+.audit-clear:hover{color:var(--accent);}
+.no-audit-banner{background:var(--surface2);border:1px solid var(--border);padding:14px 20px;font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-bottom:16px;text-align:center;}
+
+/* FOOTER */
+.hub-footer{text-align:center;font-size:10px;color:var(--muted);font-family:var(--font-mono);padding-top:16px;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+
+<!-- PASSWORD -->
+<div id="pwScreen">
+  <div class="pw-logo">
+    <div class="pw-mark">
+      <div class="pm-dot"></div>
+      <span>R</span>
+    </div>
+    <div class="pw-brand-wrap">
+      <div class="pw-brand">RATOVA AI</div>
+      <div class="pw-sub">AGENCY TOOLS</div>
+    </div>
+  </div>
+  <div class="pw-box">
+    <div class="pw-title">ENTER PASSWORD TO ACCESS</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
+    <div class="pw-error" id="pwError">Incorrect password. Try again.</div>
+  </div>
+  <div class="pw-version">Ratova AI Agency Suite v2.0</div>
+</div>
+
+<!-- HUB -->
+<div id="hub">
+  <div class="hub-header">
+    <div class="hub-logo">
+      <div class="hub-mark">
+        <div class="hub-dot"></div>
+        <span>R</span>
+      </div>
+      <div class="hub-brand">RATOVA AI</div>
+    </div>
+    <div class="hub-tagline">INTELLIGENCE, ENGINEERED.</div>
+  </div>
+
+  <!-- WORKFLOW -->
+  <div class="workflow">
+    <div class="wf-step">Discovery Call</div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step active">Tool 1: Audit</div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step">Tool 3: Follow-Up</div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step">Tool 2: Proposal</div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step">Client Accepts</div>
+    <div class="wf-arrow">→</div>
+    <div class="wf-step">Tool 4: Impl Guide</div>
+  </div>
+
+  <!-- CURRENT AUDIT STATUS -->
+  <div id="auditBanner"></div>
+
+  <!-- TOOLS GRID -->
+  <div class="tools-grid">
+
+    <div class="tool-card" onclick="openTool('tool1-audit.html')">
+      <div class="tool-num">TOOL 01</div>
+      <div class="tool-name">Audit Agent</div>
+      <div class="tool-desc">Paste your discovery call transcript. Extract signals, generate full audit report, review AI-identified solutions and choose procure vs build for each.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Transcript</span>
+        <span class="tool-tag">Report</span>
+        <span class="tool-tag">Solutions</span>
+      </div>
+      <div class="tool-arrow">→</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('tool3-followup.html')">
+      <div class="tool-num">TOOL 03</div>
+      <div class="tool-name">Follow-Up Email</div>
+      <div class="tool-desc">Review and edit the identified pain points and AI assumptions. Generate a professional follow-up email with itemized pain points to send within 2 hours of the call.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Pain Points</span>
+        <span class="tool-tag">Assumptions</span>
+        <span class="tool-tag">Email</span>
+      </div>
+      <div class="tool-arrow">→</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('tool2-proposal.html')">
+      <div class="tool-num">TOOL 02</div>
+      <div class="tool-name">Proposal Generator</div>
+      <div class="tool-desc">Generate a client-ready proposal based on your audit and selected solutions. Includes proposal review to flag issues before sending. Download as PDF.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Proposal</span>
+        <span class="tool-tag">Review</span>
+        <span class="tool-tag">PDF</span>
+      </div>
+      <div class="tool-arrow">→</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('tool4-impl.html')">
+      <div class="tool-num">TOOL 04</div>
+      <div class="tool-name">Implementation Guide</div>
+      <div class="tool-desc">Internal delivery guide. For each solution: Path A (build in-house with steps and costs at $150/hr) and Path B (2-3 tool comparisons with pricing, pros/cons, integration compatibility). HIPAA-aware for healthcare.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">Internal Only</span>
+        <span class="tool-tag">Build vs Procure</span>
+        <span class="tool-tag">Costs</span>
+        <span class="tool-tag">HIPAA</span>
+      </div>
+      <div class="tool-arrow">→</div>
+    </div>
+
+  </div>
+
+  <div class="hub-footer">
+    Ratova AI Agency Suite &nbsp;·&nbsp; Internal use only &nbsp;·&nbsp; hello@ratovaai.com &nbsp;·&nbsp; ratovaai.com
+  </div>
+</div>
+
+<script>
+const PASSWORD = 'Ratova#Launch26';
+
+function checkPw(){
+  var val = document.getElementById('pwInput').value;
+  if(val === PASSWORD){
+    document.getElementById('pwScreen').style.display='none';
+    document.getElementById('hub').style.display='block';
+    sessionStorage.setItem('ratova_auth','1');
+    loadAuditBanner();
+  } else {
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').style.borderColor='var(--accent)';
+  }
+}
+
+function escapeHtml(str){
+  if(str===null||str===undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function loadAuditBanner(){
+  var saved = localStorage.getItem('ratova_current_audit');
+  var banner = document.getElementById('auditBanner');
+  if(saved){
+    try{
+      var audit = JSON.parse(saved);
+      var solutions = (audit.solutions||[]).filter(function(s){return s.selected;});
+      banner.innerHTML = '<div class="audit-banner">'
+        +'<div class="audit-banner-left">'
+          +'<div class="audit-dot"></div>'
+          +'<div class="audit-info">'
+            +'<div class="audit-client">'+escapeHtml(audit.clientName||'Unknown client')+'</div>'
+            +'<div class="audit-meta">'+escapeHtml(audit.industry||'')+' &nbsp;·&nbsp; '+escapeHtml(audit.date||'')+' &nbsp;·&nbsp; '+solutions.length+' solutions selected</div>'
+          +'</div>'
+        +'</div>'
+        +'<button class="audit-clear" onclick="clearAudit()">Clear audit</button>'
+        +'</div>';
+    } catch(err){
+      banner.innerHTML = '<div class="no-audit-banner">Could not read saved audit · Start with Tool 1 to run a fresh audit</div>';
+    }
+  } else {
+    banner.innerHTML = '<div class="no-audit-banner">No audit loaded &nbsp;·&nbsp; Start with Tool 1 to run your first audit</div>';
+  }
+}
+
+function clearAudit(){
+  if(confirm('Clear the current audit from memory?')){
+    localStorage.removeItem('ratova_current_audit');
+    loadAuditBanner();
+  }
+}
+
+function openTool(tool){
+  window.location.href = tool;
+}
+
+// Auto-unlock if already authenticated in this session
+if(sessionStorage.getItem('ratova_auth')==='1'){
+  document.getElementById('pwScreen').style.display='none';
+  document.getElementById('hub').style.display='block';
+  loadAuditBanner();
+}
+</script>
+</body>
+</html>
