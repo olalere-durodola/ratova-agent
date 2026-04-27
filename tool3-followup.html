@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratova AI — Follow-Up Email Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#080810;--surface:#0f0f1a;--surface2:#141425;--border:#1e1e32;--text:#e8e8f0;--muted:#6b6b8a;--accent:#e11d48;--accent2:#3b82f6;--green:#22c55e;--yellow:#eab308;--font-mono:'IBM Plex Mono',monospace;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+#pwScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:24px;}
+.pw-logo{display:flex;align-items:center;gap:12px;}
+.pw-mark{width:44px;height:44px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;position:relative;}
+.pw-mark::before{content:'';position:absolute;inset:5px;border:1.5px solid var(--accent2);}
+.pw-mark span{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;position:relative;z-index:1;}
+.pw-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:4px;}
+.pw-box{background:var(--surface);border:1px solid var(--border);padding:32px;width:360px;}
+.pw-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:16px;font-family:'Syne',sans-serif;}
+.pw-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px 14px;font-family:var(--font-mono);font-size:14px;outline:none;margin-bottom:12px;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;}
+.pw-error{color:var(--accent);font-size:12px;font-family:var(--font-mono);display:none;margin-top:8px;}
+
+#app{display:none;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.mark{width:32px;height:32px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+.mark::before{content:'';position:absolute;inset:4px;border:1.5px solid var(--accent2);}
+.mark span{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;position:relative;z-index:1;}
+.brand{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;}
+.tool-badge{background:var(--accent2);color:#fff;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:3px 8px;font-family:'Syne',sans-serif;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.nav-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;}
+.nav-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+
+.main{padding:32px;max-width:880px;margin:0 auto;}
+.section-label{font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--accent);font-family:'Syne',sans-serif;margin-bottom:10px;}
+.card{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+
+.input-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.input-group label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:'Syne',sans-serif;}
+.input-group label .req{color:var(--accent);}
+.input-group input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-size:13px;outline:none;width:100%;}
+.input-group input:focus{border-color:var(--accent2);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+.btn{padding:10px 20px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;border:none;cursor:pointer;}
+.btn-primary{background:var(--accent2);color:#fff;}
+.btn-primary:hover{background:#2563eb;}
+.btn-blue{background:var(--accent2);color:#fff;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--text);color:var(--text);}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+
+.error-box{background:rgba(225,29,72,0.1);border:1px solid var(--accent);color:var(--accent);padding:12px 16px;font-size:12px;font-family:var(--font-mono);}
+.warn-box{background:rgba(234,179,8,0.08);border:1px solid var(--yellow);color:var(--yellow);padding:12px 16px;font-size:12px;font-family:var(--font-mono);margin-bottom:16px;}
+.save-msg{color:var(--green);font-size:11px;font-family:var(--font-mono);padding:8px 0;}
+
+/* Pain point cards - matches Tool 1 styling */
+.pain-card{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 16px;margin-bottom:10px;}
+.pain-card.high{border-left-color:var(--accent);}
+.pain-card.medium{border-left-color:var(--yellow);}
+.pain-card.low{border-left-color:var(--green);}
+.pain-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.pain-num-sev{display:flex;align-items:center;gap:8px;}
+.pain-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+.pain-severity{font-size:9px;font-weight:700;letter-spacing:1.5px;font-family:'Syne',sans-serif;padding:2px 8px;}
+.pain-severity.high{background:rgba(225,29,72,0.15);color:var(--accent);border:1px solid var(--accent);}
+.pain-severity.medium{background:rgba(234,179,8,0.15);color:var(--yellow);border:1px solid var(--yellow);}
+.pain-severity.low{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid var(--green);}
+.pain-edit-toggle{font-size:9px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;background:transparent;border:1px solid var(--border);padding:3px 8px;cursor:pointer;}
+.pain-edit-toggle:hover{border-color:var(--text);color:var(--text);}
+.pain-statement{font-size:13px;color:var(--text);font-weight:500;margin-bottom:6px;line-height:1.5;}
+.pain-impact{font-size:11px;color:var(--muted);line-height:1.5;}
+.pain-edit-area{display:none;margin-top:10px;}
+.pain-edit-area textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-size:12px;font-family:var(--font-mono);resize:vertical;min-height:60px;outline:none;}
+.pain-edit-area textarea:focus{border-color:var(--accent2);}
+.pain-edit-actions{display:flex;gap:6px;margin-top:6px;}
+.pain-save-btn{background:var(--accent2);color:#fff;border:none;padding:5px 12px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;}
+.pain-cancel-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;}
+
+/* Assumptions and ROI inputs share styling with pain cards */
+.assumption-item{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent2);padding:10px 14px;margin-bottom:8px;}
+.assumption-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.assumption-text{font-size:12px;color:var(--text);line-height:1.5;flex:1;}
+.assumption-text::before{content:'? ';color:var(--accent2);font-weight:700;}
+.assumption-edit-area{display:none;margin-top:8px;}
+
+.roi-input-card{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--green);padding:10px 14px;margin-bottom:8px;}
+.roi-input-name{font-family:'Syne',sans-serif;font-weight:700;color:var(--text);font-size:12px;margin-bottom:2px;}
+.roi-input-why{color:var(--muted);font-size:11px;line-height:1.5;}
+.roi-input-source{color:var(--green);font-size:10px;font-family:var(--font-mono);margin-top:3px;}
+
+/* Email box */
+.email-box{background:var(--bg);border:1px solid var(--border);padding:20px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
+.email-subject{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+/* Review with Apply / Edit / Skip - matches Tool 2 */
+.review-fix-card{background:var(--surface2);border:1px solid var(--border);padding:14px 16px;margin-bottom:12px;}
+.review-fix-card.applied{border-color:var(--green);background:rgba(34,197,94,0.04);}
+.review-fix-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.review-severity{font-size:9px;font-weight:700;letter-spacing:1.5px;font-family:'Syne',sans-serif;}
+.review-severity.high{color:var(--accent);}
+.review-severity.medium{color:var(--yellow);}
+.review-severity.low{color:var(--green);}
+.review-section-tag{font-size:9px;font-family:var(--font-mono);color:var(--muted);padding:2px 8px;border:1px solid var(--border);}
+.review-applied-badge{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;color:#000;background:var(--green);padding:2px 8px;}
+.review-issue-text{font-size:12px;color:var(--text);margin-bottom:10px;line-height:1.5;}
+.review-original{font-size:11px;font-family:var(--font-mono);color:var(--muted);margin-bottom:8px;padding:8px 10px;background:var(--bg);border-left:2px solid var(--border);line-height:1.6;white-space:pre-wrap;}
+.review-suggested{font-size:11px;font-family:var(--font-mono);color:var(--text);margin-bottom:10px;padding:8px 10px;background:var(--bg);border-left:2px solid var(--accent2);line-height:1.6;white-space:pre-wrap;}
+.review-label{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;color:var(--accent2);display:block;margin-bottom:4px;}
+.review-original .review-label{color:var(--muted);}
+.review-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.review-edit-area{margin-top:10px;}
+.review-edit-area textarea{width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px;font-size:12px;font-family:var(--font-mono);outline:none;resize:vertical;line-height:1.6;}
+.review-edit-area textarea:focus{border-color:var(--accent2);}
+
+.no-audit{text-align:center;padding:48px;color:var(--muted);}
+.no-audit-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.no-audit-sub{font-size:13px;line-height:1.6;}
+
+.processing-box{background:var(--surface);border:1px solid var(--border);padding:32px;text-align:center;margin-bottom:16px;}
+.log-list{text-align:left;font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:2;}
+.log-item{display:flex;align-items:center;gap:8px;}
+.log-item.active{color:var(--accent2);}
+.log-item.done{color:var(--green);}
+.log-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<div id="pwScreen">
+  <div class="pw-logo">
+    <div class="pw-mark"><span>R</span></div>
+    <div class="pw-brand">RATOVA AI</div>
+  </div>
+  <div class="pw-box">
+    <div class="pw-title">FOLLOW-UP EMAIL — TOOL 3</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button class="pw-btn" onclick="checkPw()">UNLOCK</button>
+    <div class="pw-error" id="pwError">Incorrect password</div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="mark"><span>R</span></div>
+      <div class="brand">RATOVA AI</div>
+      <div class="tool-badge">FOLLOW-UP EMAIL</div>
+    </div>
+    <div class="header-right">
+      <button class="nav-btn" onclick="window.location.href='index.html'">Hub</button>
+      <button class="nav-btn" onclick="window.location.href='tool1-audit.html'">Tool 1</button>
+      <button class="nav-btn" onclick="window.location.href='tool2-proposal.html'">Tool 2</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div id="noAuditMsg" class="no-audit" style="display:none;">
+      <div class="no-audit-title">No Audit Found</div>
+      <div class="no-audit-sub">Run an audit in Tool 1 first, then come back here to draft your follow-up email.</div>
+    </div>
+
+    <div id="auditContent">
+      <div style="margin-bottom:24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);font-family:'Syne',sans-serif;margin-bottom:4px;">FOLLOW-UP EMAIL DRAFT</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;" id="headerName">--</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="headerMeta">--</div>
+      </div>
+
+      <!-- PAIN POINTS -->
+      <div class="section-label">PAIN POINTS — REVIEW & EDIT BEFORE SENDING</div>
+      <div id="painPointsList"></div>
+
+      <!-- ASSUMPTIONS -->
+      <div class="section-label" style="margin-top:24px;">AI ASSUMPTIONS — VERIFY OR EDIT BEFORE SENDING</div>
+      <div id="assumptionsList"></div>
+
+      <!-- ROI INPUT QUESTIONS -->
+      <div class="section-label" style="margin-top:24px;">ROI INPUT QUESTIONS — TO ASK CLIENT IN EMAIL</div>
+      <div id="roiInputsList"></div>
+
+      <!-- EMAIL DETAILS -->
+      <div class="section-label" style="margin-top:24px;">EMAIL DETAILS</div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="input-group">
+            <label>Client First Name <span class="req">*</span></label>
+            <input type="text" id="clientFirst" placeholder="e.g. Marcus"/>
+          </div>
+          <div class="input-group">
+            <label>Report Delivery Date <span class="req">*</span></label>
+            <input type="text" id="deliveryDate" placeholder="e.g. Friday 25th April"/>
+          </div>
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Anthropic API Key <span class="req">*</span></label>
+          <input type="password" id="apiKey" placeholder="sk-ant-..."/>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="generateEmail()">Generate Follow-Up Email</button>
+      </div>
+      <div id="emailError" style="margin-top:12px;"></div>
+
+      <!-- EMAIL OUTPUT -->
+      <div id="emailOutput" style="display:none;margin-top:24px;">
+        <div class="section-label">GENERATED EMAIL</div>
+        <div class="card">
+          <div class="email-box" id="emailBox"></div>
+        </div>
+
+        <!-- REVIEW SECTION -->
+        <div style="margin-top:32px;border-top:1px solid var(--border);padding-top:24px;">
+          <div class="section-label">EMAIL REVIEW</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Check tone, missed pain, weak language, and assumption-as-fact issues before sending.</p>
+          <button class="btn btn-blue" onclick="reviewEmail()" id="reviewBtn">Review Before Sending</button>
+          <div id="reviewOutput" style="display:none;margin-top:16px;">
+            <div class="card" id="reviewContent"></div>
+          </div>
+          <div id="reviewError" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="copyEmail()">Copy Email</button>
+          <button class="btn btn-ghost" onclick="generateEmail()">Regenerate</button>
+        </div>
+        <div id="copyMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = 'Ratova#Launch26';
+const SENDER = {
+  email: 'olalere.durodola@ratovaai.com',
+  name: 'Lere Durodola',
+  title: 'Founder & CEO',
+  company: 'Ratova AI'
+};
+
+var currentAudit = null;
+var editedPainPoints = [];   // array of {severity, pain, businessImpact, evidenceFromTranscript}
+var editedAssumptions = [];  // array of strings
+var editedRoiInputs = [];    // array of {input, whyItMatters, source}
+var currentEmail = null;
+var currentReview = null;
+var appliedFixes = {};
+var originalEmailSnapshot = null;
+
+// Utilities
+function escapeHtml(str){
+  if(str===null||str===undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function safeStr(val){
+  if(val===null||val===undefined) return '';
+  if(typeof val === 'string') return val;
+  if(typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if(Array.isArray(val)) return val.map(safeStr).join(', ');
+  if(typeof val === 'object'){
+    if(val.text) return safeStr(val.text);
+    if(val.value) return safeStr(val.value);
+    if(val.description) return safeStr(val.description);
+    if(val.name) return safeStr(val.name);
+    var parts = [];
+    for(var k in val){if(val.hasOwnProperty(k) && val[k]) parts.push(k+': '+safeStr(val[k]));}
+    return parts.join(' | ');
+  }
+  return String(val);
+}
+
+function checkPw(){
+  if(document.getElementById('pwInput').value === PASSWORD){
+    sessionStorage.setItem('ratova_auth','1');
+    document.getElementById('pwScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    document.getElementById('pwError').style.display='block';
+  }
+}
+
+function init(){
+  loadAudit();
+  var saved = localStorage.getItem('ratova_api_key');
+  if(saved) document.getElementById('apiKey').value = saved;
+  document.getElementById('apiKey').addEventListener('change',function(){
+    localStorage.setItem('ratova_api_key',this.value.trim());
+  });
+}
+
+function loadAudit(){
+  var saved = localStorage.getItem('ratova_current_audit');
+  if(!saved){
+    document.getElementById('noAuditMsg').style.display='block';
+    document.getElementById('auditContent').style.display='none';
+    return;
+  }
+  try{
+    currentAudit = JSON.parse(saved);
+  }catch(err){
+    document.getElementById('noAuditMsg').style.display='block';
+    document.getElementById('auditContent').style.display='none';
+    return;
+  }
+
+  document.getElementById('headerName').textContent = currentAudit.clientName || 'Unknown client';
+  document.getElementById('headerMeta').textContent = (currentAudit.industry||'')+' · '+(currentAudit.teamSize||'N/A')+' · '+(currentAudit.date||'');
+
+  // Load pain points - normalize string-or-object shape
+  var painPoints = (currentAudit.report && currentAudit.report.painPoints) || [];
+  editedPainPoints = painPoints.map(function(p){
+    if(typeof p === 'string'){
+      return {severity:'Medium', pain:p, businessImpact:'', evidenceFromTranscript:''};
+    }
+    return {
+      severity: p.severity || 'Medium',
+      pain: p.pain || '',
+      businessImpact: p.businessImpact || '',
+      evidenceFromTranscript: p.evidenceFromTranscript || ''
+    };
+  });
+  // Sort by severity High > Medium > Low
+  var severityOrder = {'High':0,'Medium':1,'Low':2};
+  editedPainPoints.sort(function(a,b){
+    return (severityOrder[a.severity]||3) - (severityOrder[b.severity]||3);
+  });
+  renderPainPoints();
+
+  // Load assumptions
+  var assumptions = [];
+  if(currentAudit.report && currentAudit.report.assumptions) assumptions = currentAudit.report.assumptions;
+  else if(currentAudit.report && currentAudit.report.signals && currentAudit.report.signals.assumptions) assumptions = currentAudit.report.signals.assumptions;
+  editedAssumptions = assumptions.map(safeStr);
+  renderAssumptions();
+
+  // Load ROI inputs needed
+  var roiInputs = (currentAudit.report && currentAudit.report.roiInputsNeeded) || [];
+  editedRoiInputs = roiInputs.map(function(item){
+    if(typeof item === 'string'){
+      return {input:item, whyItMatters:'', source:''};
+    }
+    return {
+      input: item.input || '',
+      whyItMatters: item.whyItMatters || '',
+      source: item.source || ''
+    };
+  });
+  renderRoiInputs();
+}
+
+function renderPainPoints(){
+  var html = '';
+  if(!editedPainPoints.length){
+    html = '<div class="warn-box">No pain points found in audit. Re-run Tool 1 with a more detailed transcript.</div>';
+  } else {
+    editedPainPoints.forEach(function(pain, i){
+      var sev = (pain.severity||'Medium').toLowerCase();
+      html += '<div class="pain-card '+sev+'" id="pain-card-'+i+'">'
+        +'<div class="pain-header">'
+          +'<div class="pain-num-sev">'
+            +'<div class="pain-num">'+String(i+1).padStart(2,'0')+'</div>'
+            +'<div class="pain-severity '+sev+'">'+escapeHtml(pain.severity||'Medium').toUpperCase()+'</div>'
+          +'</div>'
+          +'<button class="pain-edit-toggle" onclick="togglePainEdit('+i+')">Edit</button>'
+        +'</div>'
+        +'<div class="pain-statement" id="pain-statement-'+i+'">'+escapeHtml(pain.pain||'')+'</div>'
+        +(pain.businessImpact?'<div class="pain-impact" id="pain-impact-'+i+'">Impact: '+escapeHtml(pain.businessImpact)+'</div>':'')
+        +'<div class="pain-edit-area" id="pain-edit-area-'+i+'">'
+          +'<textarea id="pain-pain-ta-'+i+'" placeholder="The pain itself">'+escapeHtml(pain.pain||'')+'</textarea>'
+          +'<textarea id="pain-impact-ta-'+i+'" style="margin-top:6px;" placeholder="Business impact (optional)">'+escapeHtml(pain.businessImpact||'')+'</textarea>'
+          +'<div class="pain-edit-actions">'
+            +'<button class="pain-save-btn" onclick="savePainEdit('+i+')">Save</button>'
+            +'<button class="pain-cancel-btn" onclick="togglePainEdit('+i+')">Cancel</button>'
+          +'</div>'
+        +'</div>'
+        +'</div>';
+    });
+  }
+  document.getElementById('painPointsList').innerHTML = html;
+}
+
+function togglePainEdit(i){
+  var area = document.getElementById('pain-edit-area-'+i);
+  if(!area) return;
+  area.style.display = area.style.display === 'block' ? 'none' : 'block';
+}
+
+function savePainEdit(i){
+  var painText = document.getElementById('pain-pain-ta-'+i).value.trim();
+  var impactText = document.getElementById('pain-impact-ta-'+i).value.trim();
+  if(!painText) return;
+  editedPainPoints[i].pain = painText;
+  editedPainPoints[i].businessImpact = impactText;
+  document.getElementById('pain-statement-'+i).textContent = painText;
+  var impactEl = document.getElementById('pain-impact-'+i);
+  if(impactEl){
+    if(impactText) impactEl.textContent = 'Impact: '+impactText;
+    else impactEl.textContent = '';
+  }
+  document.getElementById('pain-edit-area-'+i).style.display='none';
+}
+
+function renderAssumptions(){
+  var html = '';
+  if(!editedAssumptions.length){
+    html = '<div style="font-size:12px;color:var(--muted);font-family:var(--font-mono);padding:12px;border:1px dashed var(--border);">No assumptions extracted from transcript.</div>';
+  } else {
+    editedAssumptions.forEach(function(a, i){
+      html += '<div class="assumption-item" id="assumption-item-'+i+'">'
+        +'<div class="assumption-header">'
+          +'<div class="assumption-text" id="assumption-text-'+i+'">'+escapeHtml(a)+'</div>'
+          +'<button class="pain-edit-toggle" onclick="toggleAssumptionEdit('+i+')">Edit</button>'
+        +'</div>'
+        +'<div class="assumption-edit-area pain-edit-area" id="assumption-edit-area-'+i+'">'
+          +'<textarea id="assumption-ta-'+i+'">'+escapeHtml(a)+'</textarea>'
+          +'<div class="pain-edit-actions">'
+            +'<button class="pain-save-btn" onclick="saveAssumptionEdit('+i+')">Save</button>'
+            +'<button class="pain-cancel-btn" onclick="toggleAssumptionEdit('+i+')">Cancel</button>'
+          +'</div>'
+        +'</div>'
+        +'</div>';
+    });
+  }
+  document.getElementById('assumptionsList').innerHTML = html;
+}
+
+function toggleAssumptionEdit(i){
+  var area = document.getElementById('assumption-edit-area-'+i);
+  if(!area) return;
+  area.style.display = area.style.display === 'block' ? 'none' : 'block';
+}
+
+function saveAssumptionEdit(i){
+  var val = document.getElementById('assumption-ta-'+i).value.trim();
+  if(!val) return;
+  editedAssumptions[i] = val;
+  document.getElementById('assumption-text-'+i).textContent = val;
+  document.getElementById('assumption-edit-area-'+i).style.display='none';
+}
+
+function renderRoiInputs(){
+  var html = '';
+  if(!editedRoiInputs.length){
+    html = '<div style="font-size:12px;color:var(--muted);font-family:var(--font-mono);padding:12px;border:1px dashed var(--border);">No ROI inputs identified by the audit. The email will not include client questions.</div>';
+  } else {
+    editedRoiInputs.forEach(function(item, i){
+      html += '<div class="roi-input-card">'
+        +'<div class="roi-input-name">'+escapeHtml(item.input||'')+'</div>'
+        +(item.whyItMatters?'<div class="roi-input-why">'+escapeHtml(item.whyItMatters)+'</div>':'')
+        +(item.source?'<div class="roi-input-source">Source: '+escapeHtml(item.source)+'</div>':'')
+        +'</div>';
+    });
+  }
+  document.getElementById('roiInputsList').innerHTML = html;
+}
+
+// EMAIL GENERATION
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function callClaude(prompt, maxTokens){
+  var apiKey = document.getElementById('apiKey').value.trim();
+  var res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  var data = await res.json();
+  if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+  if(!data.content) throw new Error('No content returned. Check your API key.');
+  if(data.stop_reason === 'max_tokens'){
+    throw new Error('Response truncated - try regenerating or reducing input length.');
+  }
+  var raw = data.content.map(function(i){return i.text||'';}).join('');
+  var jsonMatch = raw.match(/\{[\s\S]*\}/);
+  var cleaned = jsonMatch ? jsonMatch[0] : raw.replace(/[`]{3}json/g,'').replace(/[`]{3}/g,'').trim();
+  try{
+    return JSON.parse(cleaned);
+  }catch(parseErr){
+    console.error('JSON parse failed. Raw:', raw);
+    throw new Error('JSON parse failed: '+parseErr.message);
+  }
+}
+
+async function generateEmail(){
+  var errEl = document.getElementById('emailError');
+  errEl.innerHTML='';
+  var clientFirst = document.getElementById('clientFirst').value.trim();
+  var deliveryDate = document.getElementById('deliveryDate').value.trim();
+  var apiKey = document.getElementById('apiKey').value.trim();
+
+  if(!apiKey || !apiKey.startsWith('sk-ant')){
+    errEl.innerHTML='<div class="error-box">Please enter a valid Anthropic API key.</div>';return;
+  }
+  if(!clientFirst || !deliveryDate){
+    errEl.innerHTML='<div class="error-box">Please enter the client first name and report delivery date.</div>';return;
+  }
+  if(!editedPainPoints.length){
+    errEl.innerHTML='<div class="error-box">No pain points to include in email.</div>';return;
+  }
+
+  var btn = document.querySelector('.btn-primary');
+  btn.textContent='...Drafting'; btn.disabled=true;
+
+  // Reset review state for fresh email
+  appliedFixes = {};
+  originalEmailSnapshot = null;
+  currentReview = null;
+  document.getElementById('reviewOutput').style.display='none';
+
+  try{
+    var painPointsText = editedPainPoints.map(function(p,i){
+      return (i+1)+'. ['+(p.severity||'Medium')+'] '+(p.pain||'')+(p.businessImpact?' — '+p.businessImpact:'');
+    }).join('\n');
+
+    var assumptionsText = editedAssumptions.length
+      ? editedAssumptions.map(function(a){return '- '+a;}).join('\n')
+      : 'None noted';
+
+    var roiQuestionsText = editedRoiInputs.length
+      ? editedRoiInputs.map(function(item){return '- '+(item.input||'')+(item.whyItMatters?' (why: '+item.whyItMatters+')':'');}).join('\n')
+      : 'None';
+
+    var leadAngle = (currentAudit.report && currentAudit.report.recommendedLeadAngle) || '';
+
+    var prompt = 'Write a warm, professional post-discovery-call follow-up email from Ratova AI.\n\n'
+      +'FROM: '+SENDER.name+', '+SENDER.title+', '+SENDER.company+' ('+SENDER.email+')\n'
+      +'TO: '+clientFirst+' at '+currentAudit.clientName+'\n'
+      +'REPORT DELIVERY DATE: '+deliveryDate+'\n\n'
+      +(leadAngle?'STRATEGIC ANGLE (the audit identified this as the highest-leverage issue - acknowledge it in the email opening, naturally not heavy-handedly):\n'+leadAngle+'\n\n':'')
+      +'PAIN POINTS TO INCLUDE (numbered list in email, sorted by severity):\n'+painPointsText+'\n\n'
+      +'ASSUMPTIONS TO VERIFY (brief note asking client to correct anything that is wrong):\n'+assumptionsText+'\n\n'
+      +'ROI QUESTIONS TO ASK (frame these as needed for accurate analysis, not as data demands):\n'+roiQuestionsText+'\n\n'
+      +'Write the email with these sections:\n'
+      +'1. Warm opening - one or two sentences. Genuine thanks, not generic. If a strategic angle is provided, weave it in naturally so the client feels you understood their core concern.\n'
+      +'2. Pain points section - intro line ("Here are the key pain points I noted from our conversation"), then the numbered list. Use the severity tags only if they help clarity, otherwise just the pain text.\n'
+      +'3. Assumptions section - brief note ("To make sure the analysis is accurate, here is what I am assuming - please correct anything that is off"), then bullet list.\n'
+      +'4. ROI questions section - ONLY if questions exist. Frame as "To put real numbers behind the audit, would you be able to share approximate values for the following?" Then bullet list. Add: "Even rough estimates help."\n'
+      +'5. Report delivery line - confirm full audit report by ['+deliveryDate+'].\n'
+      +'6. Closing - one friendly line, sign off as '+SENDER.name+'.\n\n'
+      +'Rules:\n'
+      +'- Natural, conversational tone. Not corporate.\n'
+      +'- Do NOT use "I hope this email finds you well", "It was a pleasure", or other LinkedIn-influencer cliches.\n'
+      +'- Do NOT invent claims, numbers, or details not provided.\n'
+      +'- Pain points should appear close to verbatim - these are observations to confirm, not to embellish.\n'
+      +'- Total email should be concise but complete. Quality over length.\n\n'
+      +'Return JSON only (no markdown):\n'
+      +'{"subject":"email subject line - specific to this client, not generic","body":"full email body using actual newlines"}';
+
+    var parsed = await callClaude(prompt, 2000);
+    currentEmail = parsed;
+
+    renderEmail(parsed);
+    document.getElementById('emailOutput').style.display='block';
+  }catch(err){
+    errEl.innerHTML='<div class="error-box">Email generation failed: '+escapeHtml(err.message)+'</div>';
+  }finally{
+    btn.textContent='Generate Follow-Up Email'; btn.disabled=false;
+  }
+}
+
+function renderEmail(parsed){
+  var box = document.getElementById('emailBox');
+  box.innerHTML = '<div class="email-subject">Subject: '+escapeHtml(safeStr(parsed.subject))+'</div>'+escapeHtml(safeStr(parsed.body)).replace(/\n/g,'<br>');
+}
+
+// REVIEW PASS
+async function reviewEmail(){
+  if(!currentEmail || !currentAudit){
+    document.getElementById('reviewError').innerHTML='<div class="error-box">Generate an email first.</div>';return;
+  }
+  var apiKey = document.getElementById('apiKey').value.trim();
+  if(!apiKey || !apiKey.startsWith('sk-ant')){
+    document.getElementById('reviewError').innerHTML='<div class="error-box">Please enter your API key.</div>';return;
+  }
+
+  var btn = document.getElementById('reviewBtn');
+  var originalBtnText = btn.textContent;
+  btn.textContent='...Reviewing'; btn.disabled=true;
+  document.getElementById('reviewError').innerHTML='';
+
+  try{
+    var leadAngle = (currentAudit.report && currentAudit.report.recommendedLeadAngle) || '(none)';
+
+    var prompt = 'You are a senior reviewer for Ratova AI follow-up emails. This is the first email a client receives after a discovery call - tone and accuracy matter.\n\n'
+      +'EMAIL UNDER REVIEW:\n'
+      +'Subject: '+(currentEmail.subject||'')+'\n\n'
+      +(currentEmail.body||'')+'\n\n'
+      +'AUDIT LEAD ANGLE (email should naturally acknowledge this):\n'+leadAngle+'\n\n'
+      +'Review the email for these issues. For EACH issue, provide a complete rewrite of the affected part:\n'
+      +'1. ASSUMPTIONS AS FACTS - email states something as fact that is actually inferred from limited info\n'
+      +'2. WEAK OPENING - the opening is generic, cliched, or fails to acknowledge what the client actually cares about\n'
+      +'3. MISSED PAIN - a significant pain point was not included or was understated\n'
+      +'4. TONE ISSUES - too formal, too casual, salesy, desperate, or otherwise off\n'
+      +'5. UNCLEAR ROI ASK - if ROI questions are present, are they framed naturally or do they read like a data demand\n'
+      +'6. MISSING SPECIFICS - generic statements that should reference specific things from the call\n\n'
+      +'CRITICAL RULES FOR THE REWRITE:\n'
+      +'- The targetField must be either "subject" (the email subject line) or "body" (the email body text).\n'
+      +'- The originalText field must contain the EXACT VERBATIM substring from the email that will be replaced. Copy it character-for-character including punctuation, line breaks, and capitalization. This is used for find-and-replace - any deviation breaks the apply mechanism.\n'
+      +'- The replacement field must contain ONLY the rewritten version of that exact substring - not the entire email. Same length and structure as the original snippet, just rewritten to address the issue.\n'
+      +'- For body issues: pick the smallest substring that needs changing - one paragraph, one bullet list, one sentence. Do NOT return the entire email body as either originalText or replacement.\n'
+      +'- For subject issues: originalText is the full current subject, replacement is the full new subject.\n'
+      +'- Preserve newlines exactly (use \\n in the JSON string).\n'
+      +'- Do NOT invent claims, past clients, or quantitative results.\n'
+      +'- Match the original tone and length of the snippet you are replacing.\n\n'
+      +'Return JSON only (no markdown):\n'
+      +'{"verdict":"Ready to send | Needs minor fixes | Needs significant fixes",'
+      +'"issues":[{"targetField":"subject | body","type":"ASSUMPTIONS AS FACTS | WEAK OPENING | MISSED PAIN | TONE ISSUES | UNCLEAR ROI ASK | MISSING SPECIFICS","issue":"what is wrong (one sentence)","originalText":"the specific phrase or section that has the issue","replacement":"full replacement text for the targetField"}],'
+      +'"strengths":["strength 1","strength 2"]}';
+
+    var review = await callClaude(prompt, 4000);
+    currentReview = review;
+    renderReviewWithApplyButtons(review);
+    document.getElementById('reviewOutput').style.display='block';
+  }catch(err){
+    document.getElementById('reviewError').innerHTML='<div class="error-box">Review failed: '+escapeHtml(err.message)+'</div>';
+  }finally{
+    btn.textContent=originalBtnText; btn.disabled=false;
+  }
+}
+
+function renderReviewWithApplyButtons(review){
+  var verdictColor = review.verdict==='Ready to send'?'var(--green)':review.verdict==='Needs minor fixes'?'var(--yellow)':'var(--accent)';
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'
+    +'<div style="font-family:\'Syne\',sans-serif;font-size:16px;font-weight:800;color:'+verdictColor+';">'+escapeHtml(safeStr(review.verdict))+'</div>'
+    +'<button class="btn btn-ghost" style="font-size:10px;" onclick="reviewEmail()">Re-review</button>'
+    +'</div>';
+
+  if(review.issues && review.issues.length){
+    html += '<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:12px;font-family:\'Syne\',sans-serif;">ISSUES · review the suggested fix and apply, edit, or skip</div>';
+    review.issues.forEach(function(issue, idx){
+      var sev = (issue.type==='ASSUMPTIONS AS FACTS'||issue.type==='MISSED PAIN')?'high':(issue.type==='WEAK OPENING'||issue.type==='TONE ISSUES')?'medium':'low';
+      var fieldLabel = issue.targetField === 'subject' ? 'Subject Line' : 'Email Body';
+      var alreadyApplied = appliedFixes[idx] === true;
+
+      html += '<div class="review-fix-card '+(alreadyApplied?'applied':'')+'" id="review-issue-'+idx+'">'
+        +'<div class="review-fix-header">'
+          +'<div class="review-severity '+sev+'">'+escapeHtml(safeStr(issue.type||''))+'</div>'
+          +'<div class="review-section-tag">Field: '+escapeHtml(fieldLabel)+'</div>'
+          +(alreadyApplied?'<div class="review-applied-badge">APPLIED</div>':'')
+        +'</div>'
+        +'<div class="review-issue-text">'+escapeHtml(safeStr(issue.issue||''))+'</div>'
+        +(issue.originalText?'<div class="review-original"><span class="review-label">CURRENT</span>'+escapeHtml(safeStr(issue.originalText))+'</div>':'')
+        +'<div class="review-suggested"><span class="review-label">AI SUGGESTED REWRITE</span>'+escapeHtml(safeStr(issue.replacement||''))+'</div>'
+        +'<div class="review-actions">'
+          +(alreadyApplied
+            ? '<button class="btn btn-ghost" style="font-size:10px;" onclick="undoEmailFix('+idx+')">Undo</button>'
+            : '<button class="btn btn-primary" style="font-size:10px;" onclick="applyEmailFix('+idx+')">Apply this fix</button>'
+              +' <button class="btn btn-ghost" style="font-size:10px;" onclick="toggleEmailEditFix('+idx+')">Write my own</button>'
+              +' <button class="btn btn-ghost" style="font-size:10px;color:var(--muted);" onclick="dismissEmailIssue('+idx+')">Skip</button>')
+        +'</div>'
+        +'<div class="review-edit-area" id="review-edit-'+idx+'" style="display:none;">'
+          +'<textarea id="review-edit-ta-'+idx+'" placeholder="Write your replacement text...">'+escapeHtml(safeStr(issue.replacement||''))+'</textarea>'
+          +'<div style="margin-top:8px;display:flex;gap:8px;">'
+            +'<button class="btn btn-blue" style="font-size:10px;" onclick="saveEmailCustomFix('+idx+')">Save my version</button>'
+            +'<button class="btn btn-ghost" style="font-size:10px;" onclick="toggleEmailEditFix('+idx+')">Cancel</button>'
+          +'</div>'
+        +'</div>'
+        +'</div>';
+    });
+  }
+
+  if(review.strengths && review.strengths.length){
+    html += '<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--green);margin-top:20px;margin-bottom:8px;font-family:\'Syne\',sans-serif;">STRENGTHS</div>';
+    review.strengths.forEach(function(s){
+      html += '<div style="font-size:12px;font-family:var(--font-mono);color:var(--muted);padding:4px 0;display:flex;gap:8px;"><span style="color:var(--green);">OK</span>'+escapeHtml(safeStr(s))+'</div>';
+    });
+  }
+
+  document.getElementById('reviewContent').innerHTML = html;
+}
+
+function applyEmailFix(idx){
+  if(!currentReview || !currentReview.issues || !currentReview.issues[idx]) return;
+  var issue = currentReview.issues[idx];
+  if(!originalEmailSnapshot){
+    originalEmailSnapshot = {subject: currentEmail.subject, body: currentEmail.body};
+  }
+  if(issue.targetField === 'subject'){
+    // Subject is short; replace whole field
+    currentEmail.subject = issue.replacement;
+  } else {
+    // Body: try to replace just the snippet, not overwrite the whole body
+    var origSnippet = issue.originalText || '';
+    var newSnippet = issue.replacement || '';
+    if(origSnippet && currentEmail.body && currentEmail.body.indexOf(origSnippet) !== -1){
+      currentEmail.body = currentEmail.body.replace(origSnippet, newSnippet);
+    } else {
+      // Fallback: snippet not found in body. Warn the operator instead of silently destroying the email.
+      alert('Could not apply this fix automatically because the original text was not found exactly in the email. Click "Write my own" to apply the change manually.');
+      return;
+    }
+  }
+  appliedFixes[idx] = true;
+  renderEmail(currentEmail);
+  renderReviewWithApplyButtons(currentReview);
+}
+
+function undoEmailFix(idx){
+  if(!currentReview || !currentReview.issues || !currentReview.issues[idx]) return;
+  var issue = currentReview.issues[idx];
+  if(originalEmailSnapshot){
+    if(issue.targetField === 'subject'){
+      currentEmail.subject = originalEmailSnapshot.subject;
+    } else {
+      // For body undo, swap the replacement back to the original snippet
+      var origSnippet = issue.originalText || '';
+      var appliedSnippet = issue.replacement || '';
+      if(appliedSnippet && currentEmail.body && currentEmail.body.indexOf(appliedSnippet) !== -1){
+        currentEmail.body = currentEmail.body.replace(appliedSnippet, origSnippet);
+      } else {
+        // Fallback: just restore the whole body from snapshot
+        currentEmail.body = originalEmailSnapshot.body;
+      }
+    }
+  }
+  delete appliedFixes[idx];
+  renderEmail(currentEmail);
+  renderReviewWithApplyButtons(currentReview);
+}
+
+function toggleEmailEditFix(idx){
+  var el = document.getElementById('review-edit-'+idx);
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function saveEmailCustomFix(idx){
+  if(!currentReview || !currentReview.issues || !currentReview.issues[idx]) return;
+  var issue = currentReview.issues[idx];
+  var ta = document.getElementById('review-edit-ta-'+idx);
+  if(!ta) return;
+  var customText = ta.value.trim();
+  if(!customText) return;
+  if(!originalEmailSnapshot){
+    originalEmailSnapshot = {subject: currentEmail.subject, body: currentEmail.body};
+  }
+  if(issue.targetField === 'subject'){
+    currentEmail.subject = customText;
+  } else {
+    // Replace just the snippet in the body, not the whole thing
+    var origSnippet = issue.originalText || '';
+    if(origSnippet && currentEmail.body && currentEmail.body.indexOf(origSnippet) !== -1){
+      currentEmail.body = currentEmail.body.replace(origSnippet, customText);
+    } else {
+      alert('Could not find the original text snippet in the email to replace. Try editing the email body directly using Regenerate.');
+      return;
+    }
+  }
+  appliedFixes[idx] = true;
+  renderEmail(currentEmail);
+  renderReviewWithApplyButtons(currentReview);
+}
+
+function dismissEmailIssue(idx){
+  if(!currentReview || !currentReview.issues || !currentReview.issues[idx]) return;
+  currentReview.issues.splice(idx, 1);
+  var newApplied = {};
+  Object.keys(appliedFixes).forEach(function(k){
+    var n = parseInt(k);
+    if(n < idx) newApplied[n] = appliedFixes[n];
+    else if(n > idx) newApplied[n-1] = appliedFixes[n];
+  });
+  appliedFixes = newApplied;
+  renderReviewWithApplyButtons(currentReview);
+}
+
+function copyEmail(){
+  if(!currentEmail) return;
+  var text = 'Subject: '+(currentEmail.subject||'')+'\n\n'+(currentEmail.body||'');
+  navigator.clipboard.writeText(text).then(function(){
+    document.getElementById('copyMsg').innerHTML='<div class="save-msg">Copied to clipboard. Paste into Gmail or your email client.</div>';
+    setTimeout(function(){document.getElementById('copyMsg').innerHTML='';},3000);
+  });
+}
+
+// Auto-unlock if authenticated from hub
+if(sessionStorage.getItem('ratova_auth')==='1'){
+  document.getElementById('pwScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  init();
+}
+</script>
+</body>
+</html>
